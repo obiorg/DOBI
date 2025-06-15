@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+﻿<?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
@@ -10,10 +10,9 @@
     </parent>
 
     <artifactId>dobi-moka</artifactId>
-    <name>DOBI :: Moka7 Wrapper</name>
-    <description>Encapsule la librairie Moka7 (Snap7) pour la communication S7.</description>
+    <name>DOBI :: Moka7 Source</name>
+    <description>Compile le code source de Moka7 directement dans le projet.</description>
+    
+    <!-- Aucune dépendance nécessaire car le code source est inclus -->
 
-    <dependencies>
-
-    </dependencies>
 </project>
