@@ -9,15 +9,18 @@
         <version>1.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>dobi-driver-api</artifactId>
-    <packaging>jar</packaging>
-    <name>DOBI :: Driver API</name>
-    <description>Définit les interfaces que tous les drivers concrets doivent implémenter.</description>
+    <artifactId>dobi-driver-siemens</artifactId>
+    <name>DOBI :: Driver :: Siemens S7</name>
 
     <dependencies>
         <dependency>
             <groupId>org.dobi</groupId>
-            <artifactId>dobi-core</artifactId>
+            <artifactId>dobi-driver-api</artifactId>
+            <version>\</version>
+        </dependency>
+        <dependency>
+            <groupId>org.dobi</groupId>
+            <artifactId>dobi-moka</artifactId>
             <version>\</version>
         </dependency>
     </dependencies>

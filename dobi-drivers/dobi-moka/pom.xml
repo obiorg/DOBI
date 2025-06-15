@@ -9,16 +9,17 @@
         <version>1.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>dobi-driver-api</artifactId>
-    <packaging>jar</packaging>
-    <name>DOBI :: Driver API</name>
-    <description>Définit les interfaces que tous les drivers concrets doivent implémenter.</description>
+    <artifactId>dobi-moka</artifactId>
+    <name>DOBI :: Moka7 Wrapper</name>
+    <description>Encapsule la librairie Moka7 (Snap7) pour la communication S7.</description>
 
     <dependencies>
         <dependency>
-            <groupId>org.dobi</groupId>
-            <artifactId>dobi-core</artifactId>
-            <version>\</version>
+            <groupId>com.github.s7</groupId>
+            <artifactId>moka7</artifactId>
+            <version>1.0</version> <!-- Version fictive -->
+            <scope>system</scope>
+            <systemPath>\/libs/moka7.jar</systemPath>
         </dependency>
     </dependencies>
 </project>

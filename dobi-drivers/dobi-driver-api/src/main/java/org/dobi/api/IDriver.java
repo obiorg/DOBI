@@ -1,6 +1,6 @@
-package org.dobi.api;
+package ${GroupId}.api;
 
-import org.dobi.entities.Machine;
+import ${GroupId}.entities.Machine;
 
 public interface IDriver {
 
@@ -41,4 +41,3 @@ public interface IDriver {
      * @param value La valeur à écrire.
      */
     void write(String address, Object value);
-}
