@@ -13,9 +13,9 @@
 
     <properties>
       <property name="jakarta.persistence.jdbc.driver" value="com.microsoft.sqlserver.jdbc.SQLServerDriver"/>
-      <property name="jakarta.persistence.jdbc.url" value="jdbc:sqlserver://VOTRE_SERVEUR:1433;databaseName=OBI;encrypt=true;trustServerCertificate=true;"/>
+      <property name="jakarta.persistence.jdbc.url" value="jdbc:sqlserver://10.242.14.2\BLCSCADA:1433;databaseName=OBI;encrypt=true;trustServerCertificate=true;"/>
       <property name="jakarta.persistence.jdbc.user" value="obi"/>
-      <property name="jakarta.persistence.jdbc.password" value="VOTRE_MOT_DE_PASSE"/>
+      <property name="jakarta.persistence.jdbc.password" value="ob!"/>
       <property name="hibernate.dialect" value="org.hibernate.dialect.SQLServerDialect"/>
       <property name="hibernate.show_sql" value="true"/>
       <property name="hibernate.format_sql" value="true"/>
