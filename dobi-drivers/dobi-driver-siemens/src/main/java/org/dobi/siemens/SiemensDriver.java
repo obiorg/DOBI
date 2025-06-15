@@ -1,4 +1,4 @@
-﻿package org.dobi.siemens;
+package org.dobi.siemens;
 
 import org.dobi.api.IDriver;
 import org.dobi.entities.Machine;
@@ -67,3 +67,4 @@ public class SiemensDriver implements IDriver {
         System.out.println("Writing to " + address + " (not implemented yet)");
     }
 }
+
