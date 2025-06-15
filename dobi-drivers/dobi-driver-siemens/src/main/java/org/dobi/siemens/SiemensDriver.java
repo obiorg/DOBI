@@ -2,7 +2,7 @@ package org.dobi.siemens;
 
 import org.dobi.api.IDriver;
 import org.dobi.entities.Machine;
-// CORRECTION: Utilisation du package Moka7 refactorisÃ©
+// CORRECTION: Utilisation du package Moka7 refactorisÃƒÂ©
 import org.dobi.moka7.S7Client;
 import org.dobi.moka7.S7;
 
@@ -54,8 +54,8 @@ public class SiemensDriver implements IDriver {
         return connected && client.Connected;
     }
 
-        @Override
-    public Object read(Tag tag) {
+            @Override
+    public Object read(org.dobi.entities.Tag tag) {
         if (!isConnected() || tag.getDbNumber() == null || tag.getByteAddress() == null) {
             return null;
         }
@@ -79,7 +79,7 @@ public class SiemensDriver implements IDriver {
                     return null;
                 // Ajoutez d'autres types ici (STRING, etc.)
                 default:
-                    return "Type non supporté: " + typeName;
+                    return "Type non supporte: " + typeName;
             }
         } catch (Exception e) {
             System.err.println("Erreur de lecture du tag " + tag.getName() + ": " + e.getMessage());
@@ -88,7 +88,7 @@ public class SiemensDriver implements IDriver {
     }
 
     @Override
-    public void write(Tag tag, Object value) {
+    public void write(org.dobi.entities.Tag tag, Object value) {
         // TODO: Implémenter la logique d'écriture
         System.out.println("Writing to " + tag.getName() + " (not implemented yet)");
     }

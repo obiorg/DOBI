@@ -9,45 +9,46 @@ public interface IDriver {
     /**
      * Configure le driver avec les informations de la machine cible.
      *
-     * @param machine L'entitÃ© machine contenant les paramÃ¨tres de connexion
+     * @param machine L'entitÃƒÂ© machine contenant les paramÃƒÂ¨tres de connexion
      * (IP, rack, slot...).
      */
     void configure(Machine machine);
 
     /**
-     * Ã‰tablit la connexion avec l'Ã©quipement.
+     * Ãƒâ€°tablit la connexion avec l'ÃƒÂ©quipement.
      *
-     * @return true si la connexion est rÃ©ussie, false sinon.
+     * @return true si la connexion est rÃƒÂ©ussie, false sinon.
      */
     boolean connect();
 
     /**
-     * Ferme la connexion avec l'Ã©quipement.
+     * Ferme la connexion avec l'ÃƒÂ©quipement.
      */
     void disconnect();
 
     /**
-     * VÃ©rifie si le driver est actuellement connectÃ©.
+     * VÃƒÂ©rifie si le driver est actuellement connectÃƒÂ©.
      *
-     * @return true si connectÃ©, false sinon.
+     * @return true si connectÃƒÂ©, false sinon.
      */
     boolean isConnected();
 
     /**
-     * Lit la valeur d'un tag (variable) depuis l'Ã©quipement. La structure de
-     * l'objet retournÃ© sera dÃ©finie plus tard (ex: une classe TagValue).
+     * Lit la valeur d'un tag (variable) depuis l'ÃƒÂ©quipement. La structure de
+     * l'objet retournÃƒÂ© sera dÃƒÂ©finie plus tard (ex: une classe TagValue).
      *
-     * @param address L'adresse du tag Ã  lire (ex: "DB1.DBD10").
-     * @return Un objet reprÃ©sentant la valeur lue.
+     * @param address L'adresse du tag ÃƒÂ  lire (ex: "DB1.DBD10").
+     * @return Un objet reprÃƒÂ©sentant la valeur lue.
      */
     Object read(org.dobi.entities.Tag tag);
 
     /**
-     * Ã‰crit une valeur sur un tag (variable) dans l'Ã©quipement.
+     * Ãƒâ€°crit une valeur sur un tag (variable) dans l'ÃƒÂ©quipement.
      *
-     * @param address L'adresse du tag Ã  Ã©crire.
-     * @param value La valeur Ã  Ã©crire.
+     * @param address L'adresse du tag ÃƒÂ  ÃƒÂ©crire.
+     * @param value La valeur ÃƒÂ  ÃƒÂ©crire.
      */
     void write(org.dobi.entities.Tag tag, Object value);
 }
+
 
