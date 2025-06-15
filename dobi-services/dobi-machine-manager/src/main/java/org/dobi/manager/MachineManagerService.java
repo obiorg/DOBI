@@ -1,4 +1,4 @@
-﻿package org.dobi.manager;
+package org.dobi.manager;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
