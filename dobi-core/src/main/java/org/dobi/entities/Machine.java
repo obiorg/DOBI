@@ -1,17 +1,14 @@
-import java.util.List;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.CascadeType;
 package org.dobi.entities;
 
 import java.util.List;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.CascadeType;
-
-import java.util.List;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.CascadeType;
-
-import jakarta.persistence.*;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import jakarta.persistence.Column;
 
 @Entity
 @Table(name = "machines")
@@ -33,7 +30,13 @@ public class Machine extends BaseEntity {
     @JoinColumn(name = "driver", nullable = false)
     private MachDriver driver;
 
-    // Getters and Setters
+    @OneToMany(mappedBy = "machine", cascade = CascadeType.ALL)
+    private List<Tag> tags;
+
+    public List<Tag> getTags() { return tags; }
+    public void setTags(List<Tag> tags) { this.tags = tags; }
+    
+    // Getters and Setters existants
     public String getAddress() { return address; }
     public void setAddress(String address) { this.address = address; }
     public Integer getPort() { return port; }
@@ -48,25 +51,4 @@ public class Machine extends BaseEntity {
     public void setCompany(Company company) { this.company = company; }
     public MachDriver getDriver() { return driver; }
     public void setDriver(MachDriver driver) { this.driver = driver; }
-
-    @OneToMany(mappedBy = "machine", cascade = CascadeType.ALL)
-    private List<Tag> tags;
-
-    public List<Tag> getTags() { return tags; }
-    public void setTags(List<Tag> tags) { this.tags = tags; }
-
-    @OneToMany(mappedBy = "machine", cascade = CascadeType.ALL)
-    private List<Tag> tags;
-
-    public List<Tag> getTags() { return tags; }
-    public void setTags(List<Tag> tags) { this.tags = tags; }
-
-    @OneToMany(mappedBy = "machine", cascade = CascadeType.ALL)
-    private List<Tag> tags;
-
-    public List<Tag> getTags() { return tags; }
-    public void setTags(List<Tag> tags) { this.tags = tags; }
 }
-
-
-

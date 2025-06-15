@@ -2,7 +2,7 @@ package org.dobi.siemens;
 
 import org.dobi.api.IDriver;
 import org.dobi.entities.Machine;
-// CORRECTION: Utilisation du package Moka7 refactorisé
+// CORRECTION: Utilisation du package Moka7 refactorisÃ©
 import org.dobi.moka7.S7Client;
 import org.dobi.moka7.S7;
 
@@ -54,17 +54,41 @@ public class SiemensDriver implements IDriver {
         return connected && client.Connected;
     }
 
-    @Override
-    public Object read(String address) {
-        // TODO: Implementer la logique de lecture des tags (ex: DB1.DBD4, M10.2, etc.)
-        // Il faudra parser la chaine 'address' pour determiner la zone memoire, le DB, l'offset, etc.
-        System.out.println("Reading from " + address + " (not implemented yet)");
-        return null;
+        @Override
+    public Object read(Tag tag) {
+        if (!isConnected() || tag.getDbNumber() == null || tag.getByteAddress() == null) {
+            return null;
+        }
+        
+        try {
+            byte[] buffer = new byte[4]; // Buffer assez grand pour un DWord ou un Real
+            client.ReadArea(S7.S7AreaDB, tag.getDbNumber(), tag.getByteAddress(), 4, buffer);
+
+            String typeName = tag.getType().getType().toUpperCase();
+            switch (typeName) {
+                case "REAL":
+                    return S7.GetDWordAt(buffer, 0); // Note: sera affiché comme un Long, le cast en float se fera plus tard
+                case "DINT":
+                     return S7.GetDIntAt(buffer, 0);
+                case "INT":
+                    return S7.GetWordAt(buffer, 0); // Siemens INT = 16 bits
+                case "BOOL":
+                    if (tag.getBitAddress() != null) {
+                        return S7.GetBitAt(buffer, 0, tag.getBitAddress());
+                    }
+                    return null;
+                // Ajoutez d'autres types ici (STRING, etc.)
+                default:
+                    return "Type non supporté: " + typeName;
+            }
+        } catch (Exception e) {
+            System.err.println("Erreur de lecture du tag " + tag.getName() + ": " + e.getMessage());
+            return null;
+        }
     }
 
     @Override
-    public void write(String address, Object value) {
-        // TODO: Implementer la logique d'ecriture
-        System.out.println("Writing to " + address + " (not implemented yet)");
+    public void write(Tag tag, Object value) {
+        // TODO: Implémenter la logique d'écriture
+        System.out.println("Writing to " + tag.getName() + " (not implemented yet)");
     }
-}

@@ -25,35 +25,35 @@ public class MachineManagerService {
     }
 
     /**
-     * CrÃƒÂ©e une instance du driver appropriÃƒÂ© en fonction du nom du driver de la machine.
-     * @param machine La machine pour laquelle crÃƒÂ©er le driver.
+     * CrÃƒÆ’Ã‚Â©e une instance du driver appropriÃƒÆ’Ã‚Â© en fonction du nom du driver de la machine.
+     * @param machine La machine pour laquelle crÃƒÆ’Ã‚Â©er le driver.
      * @return une instance de IDriver, ou null si le driver est inconnu.
      */
             private IDriver createDriverForMachine(Machine machine) {
         if (machine.getDriver() == null || machine.getDriver().getDriver() == null) {
-            System.err.println("Driver non défini pour la machine " + machine.getName());
+            System.err.println("Driver non dÃ©fini pour la machine " + machine.getName());
             return null;
         }
         
         String driverName = machine.getDriver().getDriver().toUpperCase();
         
-        // On vérifie si le nom du driver commence par "S7"
+        // On vÃ©rifie si le nom du driver commence par "S7"
         if (driverName.startsWith("S7")) {
             return new SiemensDriver();
         }
 
         // TODO: Ajouter d'autres cas pour "MODBUS", "OPCUA", etc.
         
-        System.err.println("Driver non supporté : " + driverName + " pour la machine " + machine.getName());
+        System.err.println("Driver non supportÃ© : " + driverName + " pour la machine " + machine.getName());
         return null;
     }
 
     public void start() {
-        System.out.println("DÃƒÂ©marrage du Machine Manager Service...");
+        System.out.println("DÃƒÆ’Ã‚Â©marrage du Machine Manager Service...");
         List<Machine> machines = getMachinesFromDb();
-        System.out.println(machines.size() + " machine(s) trouvÃƒÂ©e(s) dans la base de donnÃƒÂ©es.");
+        System.out.println(machines.size() + " machine(s) trouvÃƒÆ’Ã‚Â©e(s) dans la base de donnÃƒÆ’Ã‚Â©es.");
 
-        // CrÃƒÂ©ation d'un pool de threads pour gÃƒÂ©rer les collecteurs
+        // CrÃƒÆ’Ã‚Â©ation d'un pool de threads pour gÃƒÆ’Ã‚Â©rer les collecteurs
         executorService = Executors.newFixedThreadPool(machines.size() > 0 ? machines.size() : 1);
 
         for (Machine machine : machines) {
@@ -70,23 +70,23 @@ public class MachineManagerService {
     public List<Machine> getMachinesFromDb() {
         EntityManager em = emf.createEntityManager();
         try {
-            return em.createQuery("SELECT m FROM Machine m JOIN FETCH m.driver", Machine.class).getResultList();
+            return em.createQuery(("SELECT m FROM Machine m JOIN FETCH m.driver LEFT JOIN FETCH m.tags t LEFT JOIN FETCH t.type"), Machine.class).getResultList();
         } finally {
             em.close();
         }
     }
 
     public void stop() {
-        System.out.println("ArrÃƒÂªt du Machine Manager Service...");
+        System.out.println("ArrÃƒÆ’Ã‚Âªt du Machine Manager Service...");
         if (executorService != null) {
-            // Demande ÃƒÂ  chaque collecteur de s'arrÃƒÂªter proprement
+            // Demande ÃƒÆ’Ã‚Â  chaque collecteur de s'arrÃƒÆ’Ã‚Âªter proprement
             activeCollectors.values().forEach(MachineCollector::stop);
-            executorService.shutdown(); // N'accepte plus de nouvelles tÃƒÂ¢ches
+            executorService.shutdown(); // N'accepte plus de nouvelles tÃƒÆ’Ã‚Â¢ches
             try {
-                // Attend jusqu'ÃƒÂ  30 secondes que les tÃƒÂ¢ches en cours se terminent
+                // Attend jusqu'ÃƒÆ’Ã‚Â  30 secondes que les tÃƒÆ’Ã‚Â¢ches en cours se terminent
                 if (!executorService.awaitTermination(30, TimeUnit.SECONDS)) {
-                    System.err.println("Des tÃƒÂ¢ches n'ont pas pu se terminer, forÃƒÂ§age de l'arrÃƒÂªt.");
-                    executorService.shutdownNow(); // Force l'arrÃƒÂªt des tÃƒÂ¢ches
+                    System.err.println("Des tÃƒÆ’Ã‚Â¢ches n'ont pas pu se terminer, forÃƒÆ’Ã‚Â§age de l'arrÃƒÆ’Ã‚Âªt.");
+                    executorService.shutdownNow(); // Force l'arrÃƒÆ’Ã‚Âªt des tÃƒÆ’Ã‚Â¢ches
                 }
             } catch (InterruptedException e) {
                 executorService.shutdownNow();
@@ -95,8 +95,9 @@ public class MachineManagerService {
         if (emf != null) {
             emf.close();
         }
-        System.out.println("Machine Manager Service arrÃƒÂªtÃƒÂ©.");
+        System.out.println("Machine Manager Service arrÃƒÆ’Ã‚ÂªtÃƒÆ’Ã‚Â©.");
     }
 }
+
 
 
