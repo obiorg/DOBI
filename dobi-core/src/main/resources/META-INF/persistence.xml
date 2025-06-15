@@ -10,6 +10,7 @@
     <class>org.dobi.entities.Company</class>
     <class>org.dobi.entities.MachDriver</class>
     <class>org.dobi.entities.Machine</class>
+    <class>org.dobi.entities.Tag</class>
 
     <properties>
       <property name="jakarta.persistence.jdbc.driver" value="com.microsoft.sqlserver.jdbc.SQLServerDriver"/>
@@ -22,3 +23,4 @@
     </properties>
   </persistence-unit>
 </persistence>
+
