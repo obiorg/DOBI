@@ -2,8 +2,9 @@ package org.dobi.siemens;
 
 import org.dobi.api.IDriver;
 import org.dobi.entities.Machine;
-import s7.S7Client;
-import s7.S7;
+// CORRECTION: Utilisation du package Moka7 refactorisé
+import org.dobi.moka7.S7Client;
+import org.dobi.moka7.S7;
 
 public class SiemensDriver implements IDriver {
 
@@ -67,4 +68,3 @@ public class SiemensDriver implements IDriver {
         System.out.println("Writing to " + address + " (not implemented yet)");
     }
 }
-
