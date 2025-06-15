@@ -16,9 +16,6 @@
 
     <modules>
         <module>dobi-driver-api</module>
-            <module>dobi-moka</module>
-        <module>dobi-driver-siemens</module>
     </modules>
 
 </project>
-

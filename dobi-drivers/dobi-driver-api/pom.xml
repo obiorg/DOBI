@@ -14,17 +14,4 @@
     <name>DOBI :: Driver API</name>
     <description>Définit les interfaces que tous les drivers concrets doivent implémenter.</description>
 
-    <dependencies>
-        <dependency>
-            <groupId>org.dobi</groupId>
-            <artifactId>dobi-core</artifactId>
-            <version>\</version>
-        </dependency>
-            <dependency>
-            <groupId>org.dobi</groupId>
-            <artifactId>dobi-core</artifactId>
-            <version>\</version>
-        </dependency>
-    </dependencies>
 </project>
-
