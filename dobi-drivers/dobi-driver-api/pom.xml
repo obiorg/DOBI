@@ -20,5 +20,11 @@
             <artifactId>dobi-core</artifactId>
             <version>\</version>
         </dependency>
+            <dependency>
+            <groupId>org.dobi</groupId>
+            <artifactId>dobi-core</artifactId>
+            <version>\</version>
+        </dependency>
     </dependencies>
 </project>
+
