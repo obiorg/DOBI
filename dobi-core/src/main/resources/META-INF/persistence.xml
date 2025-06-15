@@ -6,24 +6,17 @@
   <persistence-unit name="DOBI-PU" transaction-type="RESOURCE_LOCAL">
     <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
     
-    <!-- Liste de toutes vos classes d'entités -->
     <class>org.dobi.entities.BaseEntity</class>
     <class>org.dobi.entities.Company</class>
     <class>org.dobi.entities.MachDriver</class>
     <class>org.dobi.entities.Machine</class>
-    <!-- Ajoutez les autres entités ici au fur et à mesure -->
 
     <properties>
-      <!-- ATTENTION: Configurez ces informations pour votre base de données -->
       <property name="jakarta.persistence.jdbc.driver" value="com.microsoft.sqlserver.jdbc.SQLServerDriver"/>
       <property name="jakarta.persistence.jdbc.url" value="jdbc:sqlserver://VOTRE_SERVEUR:1433;databaseName=OBI;encrypt=true;trustServerCertificate=true;"/>
       <property name="jakarta.persistence.jdbc.user" value="obi"/>
       <property name="jakarta.persistence.jdbc.password" value="VOTRE_MOT_DE_PASSE"/>
-
-      <!-- Dialecte SQL pour SQL Server -->
       <property name="hibernate.dialect" value="org.hibernate.dialect.SQLServerDialect"/>
-      
-      <!-- Optionnel: Affiche les requêtes SQL dans la console (utile pour le debug) -->
       <property name="hibernate.show_sql" value="true"/>
       <property name="hibernate.format_sql" value="true"/>
     </properties>
