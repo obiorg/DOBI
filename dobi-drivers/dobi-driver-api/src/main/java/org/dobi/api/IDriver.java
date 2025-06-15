@@ -1,43 +1,50 @@
-package ${GroupId}.api;
+package org.dobi.api;
 
-import ${GroupId}.entities.Machine;
+import org.dobi.entities.Machine;
 
 public interface IDriver {
 
     /**
      * Configure le driver avec les informations de la machine cible.
-     * @param machine L'entité machine contenant les paramètres de connexion (IP, rack, slot...).
+     *
+     * @param machine L'entitÃ© machine contenant les paramÃ¨tres de connexion
+     * (IP, rack, slot...).
      */
     void configure(Machine machine);
 
     /**
-     * Établit la connexion avec l'équipement.
-     * @return true si la connexion est réussie, false sinon.
+     * Ã‰tablit la connexion avec l'Ã©quipement.
+     *
+     * @return true si la connexion est rÃ©ussie, false sinon.
      */
     boolean connect();
 
     /**
-     * Ferme la connexion avec l'équipement.
+     * Ferme la connexion avec l'Ã©quipement.
      */
     void disconnect();
 
     /**
-     * Vérifie si le driver est actuellement connecté.
-     * @return true si connecté, false sinon.
+     * VÃ©rifie si le driver est actuellement connectÃ©.
+     *
+     * @return true si connectÃ©, false sinon.
      */
     boolean isConnected();
 
     /**
-     * Lit la valeur d'un tag (variable) depuis l'équipement.
-     * La structure de l'objet retourné sera définie plus tard (ex: une classe TagValue).
-     * @param address L'adresse du tag à lire (ex: "DB1.DBD10").
-     * @return Un objet représentant la valeur lue.
+     * Lit la valeur d'un tag (variable) depuis l'Ã©quipement. La structure de
+     * l'objet retournÃ© sera dÃ©finie plus tard (ex: une classe TagValue).
+     *
+     * @param address L'adresse du tag Ã  lire (ex: "DB1.DBD10").
+     * @return Un objet reprÃ©sentant la valeur lue.
      */
     Object read(String address);
 
     /**
-     * Écrit une valeur sur un tag (variable) dans l'équipement.
-     * @param address L'adresse du tag à écrire.
-     * @param value La valeur à écrire.
+     * Ã‰crit une valeur sur un tag (variable) dans l'Ã©quipement.
+     *
+     * @param address L'adresse du tag Ã  Ã©crire.
+     * @param value La valeur Ã  Ã©crire.
      */
     void write(String address, Object value);
+}

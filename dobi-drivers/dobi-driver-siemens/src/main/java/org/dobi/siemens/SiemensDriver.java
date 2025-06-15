@@ -1,4 +1,4 @@
-package org.dobi.siemens;
+ï»¿package org.dobi.siemens;
 
 import org.dobi.api.IDriver;
 import org.dobi.entities.Machine;
@@ -27,9 +27,9 @@ public class SiemensDriver implements IDriver {
             return false;
         }
         try {
-            // Paramètres de connexion Rack et Slot pour S7-300/400/1200/1500
+            // Parametres de connexion Rack et Slot pour S7-300/400/1200/1500
             int rack = (machine.getRack() != null) ? machine.getRack() : 0;
-            int slot = (machine.getSlot() != null) ? machine.getSlot() : 1; // Le slot 0 est souvent réservé, le 1 est commun pour la CPU
+            int slot = (machine.getSlot() != null) ? machine.getSlot() : 1; // Le slot 0 est souvent reserve, le 1 est commun pour la CPU
             
             client.ConnectTo(machine.getAddress(), rack, slot);
             connected = (client.Connected);
@@ -55,15 +55,15 @@ public class SiemensDriver implements IDriver {
 
     @Override
     public Object read(String address) {
-        // TODO: Implémenter la logique de lecture des tags (ex: DB1.DBD4, M10.2, etc.)
-        // Il faudra parser la chaîne 'address' pour déterminer la zone mémoire, le DB, l'offset, etc.
+        // TODO: Implementer la logique de lecture des tags (ex: DB1.DBD4, M10.2, etc.)
+        // Il faudra parser la chaine 'address' pour determiner la zone memoire, le DB, l'offset, etc.
         System.out.println("Reading from " + address + " (not implemented yet)");
         return null;
     }
 
     @Override
     public void write(String address, Object value) {
-        // TODO: Implémenter la logique d'écriture
+        // TODO: Implementer la logique d'ecriture
         System.out.println("Writing to " + address + " (not implemented yet)");
     }
 }
