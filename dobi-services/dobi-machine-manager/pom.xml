@@ -16,17 +16,17 @@
         <dependency>
             <groupId>org.dobi</groupId>
             <artifactId>dobi-core</artifactId>
-            <version></version>
+            <version>\</version>
         </dependency>
         <dependency>
             <groupId>org.dobi</groupId>
             <artifactId>dobi-driver-api</artifactId>
-            <version></version>
+            <version>\</version>
         </dependency>
         <dependency>
             <groupId>org.dobi</groupId>
             <artifactId>dobi-driver-siemens</artifactId>
-            <version></version>
+            <version>\</version>
         </dependency>
     </dependencies>
 </project>
