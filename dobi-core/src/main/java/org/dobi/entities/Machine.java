@@ -3,6 +3,10 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.CascadeType;
 package org.dobi.entities;
 
+import java.util.List;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.CascadeType;
+
 import jakarta.persistence.*;
 
 @Entity
@@ -46,5 +50,12 @@ public class Machine extends BaseEntity {
 
     public List<Tag> getTags() { return tags; }
     public void setTags(List<Tag> tags) { this.tags = tags; }
+
+    @OneToMany(mappedBy = "machine", cascade = CascadeType.ALL)
+    private List<Tag> tags;
+
+    public List<Tag> getTags() { return tags; }
+    public void setTags(List<Tag> tags) { this.tags = tags; }
 }
+
 
