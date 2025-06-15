@@ -19,6 +19,7 @@
     <modules>
         <module>dobi-core</module>
         <module>dobi-drivers</module>
+            <module>dobi-services</module>
     </modules>
 
     <dependencyManagement>
@@ -39,3 +40,4 @@
     </dependencyManagement>
 
 </project>
+
