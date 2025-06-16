@@ -28,5 +28,12 @@
             <artifactId>dobi-driver-siemens</artifactId>
             <version>${project.version}</version>
         </dependency>
+        
+        <!-- DÉPENDANCE MANQUANTE AJOUTÉE ICI -->
+        <dependency>
+            <groupId>org.dobi</groupId>
+            <artifactId>dobi-kafka-producer</artifactId>
+            <version>${project.version}</version>
+        </dependency>
     </dependencies>
 </project>

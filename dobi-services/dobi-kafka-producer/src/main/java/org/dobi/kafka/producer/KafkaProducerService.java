@@ -12,25 +12,25 @@ import java.util.Properties;
 public class KafkaProducerService {
     private final KafkaProducer<String, String> producer;
     private final ObjectMapper objectMapper = new ObjectMapper();
-    private final String topic = "dobi.tags.data";
+    private final String topic;
 
-    public KafkaProducerService(String bootstrapServers) {
+    public KafkaProducerService(String bootstrapServers, String topic) {
+        this.topic = topic;
         Properties props = new Properties();
         props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
         props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
         props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
         
         this.producer = new KafkaProducer<>(props);
-        System.out.println("Producteur Kafka initialise pour les serveurs: " + bootstrapServers);
+        System.out.println("Producteur Kafka initialise pour le topic '" + topic + "'");
     }
 
     public void sendTagData(TagData data) {
         try {
             String jsonValue = objectMapper.writeValueAsString(data);
-            ProducerRecord<String, String> record = new ProducerRecord<>(topic, String.valueOf(data.tagId()), jsonValue);
+            ProducerRecord<String, String> record = new ProducerRecord<>(this.topic, String.valueOf(data.tagId()), jsonValue);
             producer.send(record, (metadata, exception) -> {
                 if (exception != null) {
-                    System.err.println("Erreur d'envoi a Kafka pour le tag " + data.tagId());
                     exception.printStackTrace();
                 }
             });

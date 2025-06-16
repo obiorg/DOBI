@@ -23,11 +23,35 @@ public class MachineManagerService {
     private ExecutorService executorService;
     private final Properties driverProperties = new Properties();
     private final KafkaProducerService kafkaProducerService;
+    private final Properties appProperties = new Properties();
 
     public MachineManagerService() {
+        // 1. Charger la configuration de l'application (Kafka, etc.)
+        loadAppProperties();
+        
+        // 2. Initialiser les services avec cette configuration
         this.emf = Persistence.createEntityManagerFactory("DOBI-PU");
+        this.kafkaProducerService = new KafkaProducerService(
+            appProperties.getProperty("kafka.bootstrap.servers", "localhost:9092"),
+            appProperties.getProperty("kafka.topic.tags.data", "dobi.tags.data")
+        );
+        
+        // 3. Charger la configuration des drivers
         loadDriverProperties();
-        this.kafkaProducerService = new KafkaProducerService("localhost:9092"); // TODO: Mettre l'adresse de votre serveur Kafka
+    }
+    
+    private void loadAppProperties() {
+        try (InputStream input = getClass().getClassLoader().getResourceAsStream("application.properties")) {
+            if (input == null) {
+                System.err.println("ATTENTION: Le fichier application.properties est introuvable ! Utilisation des valeurs par défaut.");
+                return;
+            }
+            appProperties.load(input);
+            System.out.println("Fichier de configuration de l'application chargé.");
+        } catch (Exception ex) {
+            System.err.println("Erreur lors du chargement de application.properties");
+            ex.printStackTrace();
+        }
     }
 
     private void loadDriverProperties() {
@@ -37,9 +61,7 @@ public class MachineManagerService {
                 return;
             }
             driverProperties.load(input);
-            System.out.println("Fichier de configuration des drivers charge avec " + driverProperties.size() + " entrees.");
         } catch (Exception ex) {
-            System.err.println("Erreur lors du chargement de drivers.properties");
             ex.printStackTrace();
         }
     }
@@ -47,18 +69,14 @@ public class MachineManagerService {
     private IDriver createDriverForMachine(Machine machine) {
         String driverName = machine.getDriver().getDriver();
         String driverClassName = driverProperties.getProperty(driverName);
-
-        if (driverClassName == null || driverClassName.trim().isEmpty()) {
+        if (driverClassName == null) {
             System.err.println("Aucune classe Java n'est associee au driver '" + driverName + "' dans drivers.properties.");
             return null;
         }
-
         try {
-            Class<?> driverClass = Class.forName(driverClassName);
-            return (IDriver) driverClass.getConstructor().newInstance();
+            return (IDriver) Class.forName(driverClassName).getConstructor().newInstance();
         } catch (Exception e) {
             System.err.println("Erreur lors de l'instanciation de la classe driver '" + driverClassName + "'");
-            e.printStackTrace();
             return null;
         }
     }
@@ -67,13 +85,11 @@ public class MachineManagerService {
         System.out.println("Demarrage du Machine Manager Service...");
         List<Machine> machines = getMachinesFromDb();
         System.out.println(machines.size() + " machine(s) trouvee(s) dans la base de donnees.");
-
         executorService = Executors.newFixedThreadPool(Math.max(1, machines.size()));
-
         for (Machine machine : machines) {
             IDriver driver = createDriverForMachine(machine);
             if (driver != null) {
-                System.out.println(" -> Lancement du collecteur pour la machine: " + machine.getName() + " (Classe: " + driver.getClass().getSimpleName() + ")");
+                System.out.println(" -> Lancement du collecteur pour la machine: " + machine.getName());
                 MachineCollector collector = new MachineCollector(machine, driver, kafkaProducerService);
                 activeCollectors.put(machine.getId(), collector);
                 executorService.submit(collector);
@@ -100,7 +116,6 @@ public class MachineManagerService {
             executorService.shutdown();
             try {
                 if (!executorService.awaitTermination(30, TimeUnit.SECONDS)) {
-                    System.err.println("Des taches n'ont pas pu se terminer, forçage de l'arret.");
                     executorService.shutdownNow();
                 }
             } catch (InterruptedException e) {
