@@ -29,10 +29,15 @@ public class Tag extends BaseEntity {
     @JoinColumn(name = "machine", nullable = false)
     private Machine machine;
     
-    // CORRECTION: Lier à l'entité TagType en utilisant la bonne colonne "type"
+    // CORRECTION: Lier Ã  l'entitÃ© TagType en utilisant la bonne colonne "type"
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "type", nullable = false)
     private TagType type;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "memory", nullable = false)
+    private TagMemory memory;
+
 
     // Getters and Setters
     public String getName() { return name; }
@@ -49,4 +54,9 @@ public class Tag extends BaseEntity {
     public void setMachine(Machine machine) { this.machine = machine; }
     public TagType getType() { return type; }
     public void setType(TagType type) { this.type = type; }
+
+
+    public TagMemory getMemory() { return memory; }
+    public void setMemory(TagMemory memory) { this.memory = memory; }
 }
+

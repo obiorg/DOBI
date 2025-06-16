@@ -43,11 +43,11 @@ public class MachineManagerService {
     private void loadAppProperties() {
         try (InputStream input = getClass().getClassLoader().getResourceAsStream("application.properties")) {
             if (input == null) {
-                System.err.println("ATTENTION: Le fichier application.properties est introuvable ! Utilisation des valeurs par défaut.");
+                System.err.println("ATTENTION: Le fichier application.properties est introuvable ! Utilisation des valeurs par dÃ©faut.");
                 return;
             }
             appProperties.load(input);
-            System.out.println("Fichier de configuration de l'application chargé.");
+            System.out.println("Fichier de configuration de l'application chargÃ©.");
         } catch (Exception ex) {
             System.err.println("Erreur lors du chargement de application.properties");
             ex.printStackTrace();
@@ -100,7 +100,7 @@ public class MachineManagerService {
     public List<Machine> getMachinesFromDb() {
         EntityManager em = emf.createEntityManager();
         try {
-            return em.createQuery("SELECT m FROM Machine m JOIN FETCH m.driver LEFT JOIN FETCH m.tags t LEFT JOIN FETCH t.type", Machine.class).getResultList();
+            return em.createQuery(("SELECT m FROM Machine m JOIN FETCH m.driver LEFT JOIN FETCH m.tags t LEFT JOIN FETCH t.type ty LEFT JOIN FETCH t.memory"), Machine.class).getResultList();
         } finally {
             em.close();
         }
@@ -128,3 +128,4 @@ public class MachineManagerService {
         System.out.println("Machine Manager Service arrete.");
     }
 }
+
