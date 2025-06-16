@@ -11,7 +11,7 @@
 
     <artifactId>dobi-app</artifactId>
     <name>DOBI :: Application</name>
-    <description>Point d'entrée principal de l'application DOBI.</description>
+    <description>Point d'entrÃ©e principal de l'application DOBI.</description>
 
     <dependencies>
         <dependency>
@@ -20,7 +20,10 @@
             <version>${project.version}</version>
         </dependency>
     </dependencies>
-    <build>        <plugins>            <plugin>
+
+    <build>
+        <plugins>
+            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
                 <version>3.7.1</version>
@@ -47,4 +50,3 @@
         </plugins>
     </build>
 </project>
-

@@ -13,6 +13,7 @@
     <class>org.dobi.entities.Tag</class>
     <class>org.dobi.entities.TagType</class>
     <class>org.dobi.entities.TagMemory</class>
+    <class>org.dobi.entities.PersStandard</class>
 
     <properties>
       <property name="jakarta.persistence.jdbc.driver" value="com.microsoft.sqlserver.jdbc.SQLServerDriver"/>
@@ -25,6 +26,7 @@
     </properties>
   </persistence-unit>
 </persistence>
+
 
 
 
