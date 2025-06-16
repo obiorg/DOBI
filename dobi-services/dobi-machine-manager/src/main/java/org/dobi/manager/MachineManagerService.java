@@ -43,11 +43,11 @@ public class MachineManagerService {
     private void loadAppProperties() {
         try (InputStream input = getClass().getClassLoader().getResourceAsStream("application.properties")) {
             if (input == null) {
-                System.err.println("ATTENTION: Le fichier application.properties est introuvable ! Utilisation des valeurs par dÃ©faut.");
+                System.err.println("ATTENTION: Le fichier application.properties est introuvable ! Utilisation des valeurs par dÃƒÂ©faut.");
                 return;
             }
             appProperties.load(input);
-            System.out.println("Fichier de configuration de l'application chargÃ©.");
+            System.out.println("Fichier de configuration de l'application chargÃƒÂ©.");
         } catch (Exception ex) {
             System.err.println("Erreur lors du chargement de application.properties");
             ex.printStackTrace();
@@ -128,4 +128,5 @@ public class MachineManagerService {
         System.out.println("Machine Manager Service arrete.");
     }
 }
+
 
