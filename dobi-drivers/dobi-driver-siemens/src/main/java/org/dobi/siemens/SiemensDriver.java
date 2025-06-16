@@ -37,7 +37,7 @@ public class SiemensDriver implements IDriver {
     
     @Override
     public Object read(Tag tag) {
-        if (!isConnected() || tag.getByteAddress() == null) return null;
+        if (!isConnected() || tag.getByteAddress() == null || tag.getMemory() == null || tag.getType() == null) return null;
 
         int area = getS7Area(tag.getMemory().getName());
         int dbNumber = (area == S7.S7AreaDB && tag.getDbNumber() != null) ? tag.getDbNumber() : 0;
@@ -70,19 +70,19 @@ public class SiemensDriver implements IDriver {
             case "SINT": // Signed 8-bit integer
                 return buffer[0];
             case "USINT": // Unsigned 8-bit integer
-                return S7.GetUSIntAt(buffer, 0);
+                return buffer[0] & 0xFF;
             case "WORD":
                 return S7.GetWordAt(buffer, 0);
             case "INT":
                 return S7.GetShortAt(buffer, 0);
-            case "UINT":
-                return S7.GetUShortAt(buffer, 0);
+            case "UINT": // Unsigned 16-bit integer
+                return S7.GetWordAt(buffer, 0) & 0xFFFF;
             case "DWORD":
                 return S7.GetDWordAt(buffer, 0);
             case "DINT":
                 return S7.GetDIntAt(buffer, 0);
-            case "UDINT":
-                return S7.GetUDIntAt(buffer, 0);
+            case "UDINT": // Unsigned 32-bit integer
+                return S7.GetDWordAt(buffer, 0) & 0xFFFFFFFFL;
             case "REAL":
                 return S7.GetFloatAt(buffer, 0);
             case "DATETIME":
