@@ -1,65 +1,70 @@
 package org.dobi.manager;
 
 import org.dobi.api.IDriver;
+import org.dobi.dto.TagData;
 import org.dobi.entities.Machine;
+import org.dobi.kafka.producer.KafkaProducerService;
 
-/**
- * TÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢che exÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â©cutable qui gÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¨re le cycle de vie de la communication
- * pour une seule machine.
- */
 public class MachineCollector implements Runnable {
 
     private final Machine machine;
     private final IDriver driver;
-    // Volatile pour assurer la visibilitÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â© entre les threads
-    private volatile boolean running = true; 
+    private volatile boolean running = true;
+    private final KafkaProducerService kafkaProducerService;
 
-    public MachineCollector(Machine machine, IDriver driver) {
+    public MachineCollector(Machine machine, IDriver driver, KafkaProducerService kafkaProducerService) {
         this.machine = machine;
         this.driver = driver;
+        this.kafkaProducerService = kafkaProducerService;
     }
 
     @Override
     public void run() {
-        System.out.println("[Thread " + Thread.currentThread().getId() + "] DÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â©marrage du collecteur pour " + machine.getName());
+        System.out.println("[Thread " + Thread.currentThread().getId() + "] Demarrage du collecteur pour " + machine.getName());
         driver.configure(machine);
 
         while (running) {
             try {
                 if (!driver.isConnected()) {
-                    System.out.println("[Thread " + Thread.currentThread().getId() + "] Tentative de connexion ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â  " + machine.getName() + "...");
+                    System.out.println("[Thread " + Thread.currentThread().getId() + "] Tentative de connexion a " + machine.getName() + "...");
                     if (driver.connect()) {
-                        System.out.println("[Thread " + Thread.currentThread().getId() + "] ConnectÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â© ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â  " + machine.getName());
+                        System.out.println("[Thread " + Thread.currentThread().getId() + "] Connecte a " + machine.getName());
                     } else {
-                        System.out.println("[Thread " + Thread.currentThread().getId() + "] Echec de la connexion ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â  " + machine.getName() + ". Nouvelle tentative dans 10s.");
-                        Thread.sleep(10000); // Attendre 10 secondes avant de rÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â©essayer
-                        continue; // Reboucle pour retenter la connexion
+                        System.out.println("[Thread " + Thread.currentThread().getId() + "] Echec de la connexion a " + machine.getName() + ". Nouvelle tentative dans 10s.");
+                        Thread.sleep(10000);
+                        continue;
                     }
                 }
+
+                if (machine.getTags() == null || machine.getTags().isEmpty()) {
+                    System.out.println("[Thread " + Thread.currentThread().getId() + "] Aucun tag a lire pour " + machine.getName() + ".");
+                } else {
+                     for (org.dobi.entities.Tag tag : machine.getTags()) {
+                         if (tag.isActive()) {
+                            Object value = driver.read(tag);
+                            if (value != null) {
+                                System.out.println("    -> Tag: " + tag.getName() + " | Valeur: " + value);
+                                TagData tagData = new TagData(tag.getId(), tag.getName(), value, System.currentTimeMillis());
+                                kafkaProducerService.sendTagData(tagData);
+                            }
+                         }
+                     }
+                }
                 
-                // --- Boucle de lecture des donnÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â©es ---
-                System.out.println("[Thread " + Thread.currentThread().getId() + "] Lecture des donnÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â©es sur " + machine.getName() + "...");
-                // TODO: Parcourir les tags de la machine et les lire avec driver.read(...)
-                
-                Thread.sleep(5000); // Attendre 5 secondes entre chaque cycle de lecture
+                Thread.sleep(5000);
 
             } catch (InterruptedException e) {
-                Thread.currentThread().interrupt(); // RedÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â©finir le statut d'interruption
-                System.out.println("[Thread " + Thread.currentThread().getId() + "] Le thread collecteur pour " + machine.getName() + " a ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â©tÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â© interrompu.");
-                running = false; // Sortir de la boucle
+                Thread.currentThread().interrupt();
+                System.out.println("[Thread " + Thread.currentThread().getId() + "] Le thread collecteur pour " + machine.getName() + " a ete interrompu.");
+                running = false;
             }
         }
         
         driver.disconnect();
-        System.out.println("[Thread " + Thread.currentThread().getId() + "] Collecteur pour " + machine.getName() + " arrÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂªtÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â© et dÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â©connectÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â©.");
+        System.out.println("[Thread " + Thread.currentThread().getId() + "] Collecteur pour " + machine.getName() + " arrete et deconnecte.");
     }
 
     public void stop() {
         this.running = false;
     }
 }
-
-
-
-
-

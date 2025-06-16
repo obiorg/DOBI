@@ -31,7 +31,7 @@ public class SiemensDriver implements IDriver {
             // Parametres de connexion Rack et Slot pour S7-300/400/1200/1500
             int rack = (machine.getRack() != null) ? machine.getRack() : 0;
             int slot = (machine.getSlot() != null) ? machine.getSlot() : 1; // Le slot 0 est souvent reserve, le 1 est commun pour la CPU
-            
+
             client.ConnectTo(machine.getAddress(), rack, slot);
             connected = (client.Connected);
             return connected;
@@ -54,12 +54,12 @@ public class SiemensDriver implements IDriver {
         return connected && client.Connected;
     }
 
-            @Override
+    @Override
     public Object read(org.dobi.entities.Tag tag) {
         if (!isConnected() || tag.getDbNumber() == null || tag.getByteAddress() == null) {
             return null;
         }
-        
+
         try {
             byte[] buffer = new byte[4]; // Buffer assez grand pour un DWord ou un Real
             client.ReadArea(S7.S7AreaDB, tag.getDbNumber(), tag.getByteAddress(), 4, buffer);
@@ -69,7 +69,7 @@ public class SiemensDriver implements IDriver {
                 case "REAL":
                     return S7.GetDWordAt(buffer, 0); // Note: sera affiché comme un Long, le cast en float se fera plus tard
                 case "DINT":
-                     return S7.GetDIntAt(buffer, 0);
+                    return S7.GetDIntAt(buffer, 0);
                 case "INT":
                     return S7.GetWordAt(buffer, 0); // Siemens INT = 16 bits
                 case "BOOL":
@@ -92,3 +92,4 @@ public class SiemensDriver implements IDriver {
         // TODO: Implémenter la logique d'écriture
         System.out.println("Writing to " + tag.getName() + " (not implemented yet)");
     }
+}

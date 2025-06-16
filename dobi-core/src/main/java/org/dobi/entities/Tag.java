@@ -28,13 +28,11 @@ public class Tag extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "machine", nullable = false)
     private Machine machine;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "	ype", nullable = false)
-    private TagType type;
-
     
-    // Ajoutez ici d'autres champs de la table 'tags' si nÃ©cessaire (type, cycle, etc.)
+    // CORRECTION: Lier à l'entité TagType en utilisant la bonne colonne "type"
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "type", nullable = false)
+    private TagType type;
 
     // Getters and Setters
     public String getName() { return name; }
@@ -49,9 +47,6 @@ public class Tag extends BaseEntity {
     public void setActive(boolean active) { this.active = active; }
     public Machine getMachine() { return machine; }
     public void setMachine(Machine machine) { this.machine = machine; }
-
-
     public TagType getType() { return type; }
     public void setType(TagType type) { this.type = type; }
 }
-
