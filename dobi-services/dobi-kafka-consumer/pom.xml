@@ -16,7 +16,7 @@
         <dependency>
             <groupId>org.dobi</groupId>
             <artifactId>dobi-core</artifactId>
-            <version>\</version>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.kafka</groupId>

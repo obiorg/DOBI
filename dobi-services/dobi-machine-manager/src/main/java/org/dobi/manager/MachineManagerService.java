@@ -43,11 +43,11 @@ public class MachineManagerService {
     private void loadAppProperties() {
         try (InputStream input = getClass().getClassLoader().getResourceAsStream("application.properties")) {
             if (input == null) {
-                System.err.println("ATTENTION: Le fichier application.properties est introuvable ! Utilisation des valeurs par dÃ©faut.");
+                System.err.println("ATTENTION: Le fichier application.properties est introuvable ! Utilisation des valeurs par dÃƒÂ©faut.");
                 return;
             }
             appProperties.load(input);
-            System.out.println("Fichier de configuration de l'application chargÃ©.");
+            System.out.println("Fichier de configuration de l'application chargÃƒÂ©.");
         } catch (Exception ex) {
             System.err.println("Erreur lors du chargement de application.properties");
             ex.printStackTrace();
@@ -68,7 +68,7 @@ public class MachineManagerService {
 
     private IDriver createDriverForMachine(Machine machine) {
         if (machine.getDriver() == null || machine.getDriver().getDriver() == null) {
-            System.err.println("Driver non dÃ©fini pour la machine " + machine.getName());
+            System.err.println("Driver non dÃƒÂ©fini pour la machine " + machine.getName());
             return null;
         }
 
@@ -81,7 +81,7 @@ public class MachineManagerService {
         }
 
         try {
-            // Utilisation de la rÃ©flexion pour instancier la classe de driver
+            // Utilisation de la rÃƒÂ©flexion pour instancier la classe de driver
             Class<?> driverClass = Class.forName(driverClassName);
             return (IDriver) driverClass.getConstructor().newInstance();
         } catch (Exception e) {
@@ -112,8 +112,8 @@ public class MachineManagerService {
     public List<Machine> getMachinesFromDb() {
         EntityManager em = emf.createEntityManager();
         try {
-            // RequÃªte pour charger les machines avec leurs tags, types et mÃ©moires
-            return em.createQuery("SELECT m FROM Machine m JOIN FETCH m.driver LEFT JOIN FETCH m.tags t LEFT JOIN FETCH t.type ty LEFT JOIN FETCH t.memory", Machine.class).getResultList();
+            // RequÃƒÂªte pour charger les machines avec leurs tags, types et mÃƒÂ©moires
+            return em.createQuery(("SELECT m FROM Machine m JOIN FETCH m.driver JOIN FETCH m.company LEFT JOIN FETCH m.tags t LEFT JOIN FETCH t.type ty LEFT JOIN FETCH t.memory"), Machine.class).getResultList();
         } finally {
             em.close();
         }
@@ -129,7 +129,7 @@ public class MachineManagerService {
             executorService.shutdown();
             try {
                 if (!executorService.awaitTermination(30, TimeUnit.SECONDS)) {
-                    System.err.println("Des taches n'ont pas pu se terminer, forÃ§age de l'arret.");
+                    System.err.println("Des taches n'ont pas pu se terminer, forÃƒÂ§age de l'arret.");
                     executorService.shutdownNow();
                 }
             } catch (InterruptedException e) {
@@ -145,4 +145,5 @@ public class MachineManagerService {
     public EntityManagerFactory getEmf() { return emf; }
     public String getAppProperty(String key) { return appProperties.getProperty(key); }
 }
+
 

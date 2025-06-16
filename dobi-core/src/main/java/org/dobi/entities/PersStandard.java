@@ -10,7 +10,10 @@ import java.time.LocalDateTime;
 public class PersStandard extends BaseEntity {
 
     @Column(nullable = false)
-    private Long tag; // ID du tag
+    private Long tag;
+
+    @Column(nullable = false)
+    private Integer company; // ID du tag
 
     private Float vFloat;
     private Integer vInt;
@@ -36,4 +39,9 @@ public class PersStandard extends BaseEntity {
     public void setvDateTime(LocalDateTime vDateTime) { this.vDateTime = vDateTime; }
     public LocalDateTime getvStamp() { return vStamp; }
     public void setvStamp(LocalDateTime vStamp) { this.vStamp = vStamp; }
+
+
+    public Integer getCompany() { return company; }
+    public void setCompany(Integer company) { this.company = company; }
 }
+

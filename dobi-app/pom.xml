@@ -19,6 +19,13 @@
             <artifactId>dobi-machine-manager</artifactId>
             <version>${project.version}</version>
         </dependency>
+        
+        <!-- DÉPENDANCE MANQUANTE AJOUTÉE ICI -->
+        <dependency>
+            <groupId>org.dobi</groupId>
+            <artifactId>dobi-kafka-consumer</artifactId>
+            <version>${project.version}</version>
+        </dependency>
     </dependencies>
 
     <build>

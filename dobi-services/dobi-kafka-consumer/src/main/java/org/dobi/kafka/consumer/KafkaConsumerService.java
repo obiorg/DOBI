@@ -37,7 +37,7 @@ public class KafkaConsumerService implements Runnable {
 
         this.consumer = new KafkaConsumer<>(props);
         this.consumer.subscribe(Collections.singletonList(topic));
-        System.out.println("Consommateur Kafka initialisé pour le topic '" + topic + "'");
+        System.out.println("Consommateur Kafka initialisÃ© pour le topic '" + topic + "'");
     }
 
     @Override
@@ -49,33 +49,35 @@ public class KafkaConsumerService implements Runnable {
                     TagData tagData = objectMapper.readValue(record.value(), TagData.class);
                     processTagData(tagData);
                 } catch (Exception e) {
-                    System.err.println("Erreur de désérialisation du message Kafka: " + e.getMessage());
+                    System.err.println("Erreur de dÃ©sÃ©rialisation du message Kafka: " + e.getMessage());
                 }
             }
         }
         consumer.close();
-        System.out.println("Consommateur Kafka arrêté.");
+        System.out.println("Consommateur Kafka arrÃªtÃ©.");
     }
 
-    private void processTagData(TagData data) {
+        private void processTagData(TagData data) {
         EntityManager em = emf.createEntityManager();
         try {
             em.getTransaction().begin();
 
-            // 1. Mettre à jour la valeur "live" dans la table Tag
             Tag tag = em.find(Tag.class, data.tagId());
             if (tag != null) {
+                // 1. Mettre à jour la valeur "live" dans la table Tag
                 updateTagValue(tag, data.value());
-                tag.setvStamp(LocalDateTime.now()); // Mettre à jour le timestamp de la dernière lecture
+                tag.setvStamp(LocalDateTime.now());
                 em.merge(tag);
-            }
 
-            // 2. Créer un enregistrement d'historique
-            PersStandard history = new PersStandard();
-            history.setTag(data.tagId());
-            updateHistoryValue(history, data.value());
-            history.setvStamp(LocalDateTime.ofInstant(Instant.ofEpochMilli(data.timestamp()), ZoneId.systemDefault()));
-            em.persist(history);
+                // 2. Créer un enregistrement d'historique
+                PersStandard history = new PersStandard();
+                history.setTag(data.tagId());
+                // CORRECTION: On récupère l'ID de la company depuis l'objet Tag
+                history.setCompany(tag.getMachine().getCompany().getId().intValue());
+                updateHistoryValue(history, data.value());
+                history.setvStamp(LocalDateTime.ofInstant(Instant.ofEpochMilli(data.timestamp()), ZoneId.systemDefault()));
+                em.persist(history);
+            }
 
             em.getTransaction().commit();
             System.out.println("Tag " + data.tagName() + " mis à jour avec la valeur " + data.value());
@@ -115,3 +117,4 @@ public class KafkaConsumerService implements Runnable {
         this.running = false;
     }
 }
+
