@@ -21,6 +21,8 @@ public class Machine extends BaseEntity {
     private Integer rack;
     private Integer slot;
     private String name;
+
+    private Integer bus;
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "company", nullable = false)
@@ -51,4 +53,9 @@ public class Machine extends BaseEntity {
     public void setCompany(Company company) { this.company = company; }
     public MachDriver getDriver() { return driver; }
     public void setDriver(MachDriver driver) { this.driver = driver; }
+
+
+    public Integer getBus() { return bus; }
+    public void setBus(Integer bus) { this.bus = bus; }
 }
+
