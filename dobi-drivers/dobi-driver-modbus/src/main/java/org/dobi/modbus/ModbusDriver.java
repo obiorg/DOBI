@@ -36,7 +36,7 @@ public class ModbusDriver implements IDriver {
             future.get(); // Attend que la connexion soit établie.
             return true;
         } catch (Exception e) {
-            System.err.println("Erreur de connexion Modbus à " + machine.getName() + ": " + e.getMessage());
+            System.err.println("Erreur de connexion Modbus a " + machine.getName() + ": " + e.getMessage());
             return false;
         }
     }
@@ -56,7 +56,7 @@ public class ModbusDriver implements IDriver {
 
     @Override
     public Object read(Tag tag) {
-        System.out.println("Lecture Modbus pour le tag " + tag.getName() + " (non implémentée)");
+        System.out.println("Lecture Modbus pour le tag " + tag.getName() + " (non implementee)");
         // TODO: Implémenter la logique de lecture des registres Modbus
         // (Read Holding Registers, Read Input Registers, etc.)
         return null;
@@ -64,7 +64,7 @@ public class ModbusDriver implements IDriver {
 
     @Override
     public void write(Tag tag, Object value) {
-        System.out.println("Écriture Modbus pour le tag " + tag.getName() + " (non implémentée)");
+        System.out.println("Ecriture Modbus pour le tag " + tag.getName() + " (non implementee)");
         // TODO: Implémenter la logique d'écriture
     }
 }

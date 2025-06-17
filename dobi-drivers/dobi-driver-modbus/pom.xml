@@ -20,7 +20,7 @@
         </dependency>
         <dependency>
             <groupId>com.digitalpetri.modbus</groupId>
-            <artifactId>modbus-stack-tcp</artifactId>
+            <artifactId>modbus-master-tcp</artifactId>
         </dependency>
     </dependencies>
 </project>
