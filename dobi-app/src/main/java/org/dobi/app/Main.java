@@ -1,40 +1,99 @@
 package org.dobi.app;
 
-import org.dobi.manager.MachineManagerService;
 import org.dobi.kafka.consumer.KafkaConsumerService;
+import org.dobi.manager.MachineManagerService;
+
+import javax.swing.*;
+import java.awt.*;
+import java.net.URL;
 
 public class Main {
-    public static void main(String[] args) {
-        System.out.println("Lancement de l'application DOBI...");
-        
-        // Initialisation du service principal
-        MachineManagerService collectorService = new MachineManagerService();
-        // TODO: Déplacer la logique de création de l'EMF dans un service partagé
-        KafkaConsumerService persistenceService = new KafkaConsumerService(collectorService.getAppProperty("kafka.bootstrap.servers"), "dobi-persistence-group", collectorService.getAppProperty("kafka.topic.tags.data"), collectorService.getEmf());
-        new Thread(persistenceService).start();
-        
-        // CrÃ©ation d'un "shutdown hook".
-        // Ce bloc de code sera exÃ©cutÃ© lorsque l'application s'arrÃªtera (ex: Ctrl+C)
-        // pour s'assurer que les connexions sont correctement fermÃ©es.
-        Thread shutdownHook = new Thread(() -> {
-            System.out.println("DÃ©but de la procÃ©dure d'arrÃªt...");
-            collectorService.stop();
-            persistenceService.stop();
-            System.out.println("Application DOBI arrÃªtÃ©e proprement.");
-        });
-        Runtime.getRuntime().addShutdownHook(shutdownHook);
 
-        // DÃ©marrage du service de collecte
+    private static MachineManagerService collectorService;
+    private static KafkaConsumerService persistenceService;
+
+    public static void main(String[] args) {
+        // Lancer l'interface graphique sur le bon thread (Event Dispatch Thread)
+        SwingUtilities.invokeLater(Main::createAndShowGUI);
+    }
+
+    private static void createAndShowGUI() {
+        // Vérifier si le SystemTray est supporté
+        if (!SystemTray.isSupported()) {
+            System.err.println("Le SystemTray n'est pas supporté sur ce système.");
+            // Lancer en mode console dégradé si pas de tray
+            startServices(); 
+            return;
+        }
+
+        // Créer la fenêtre principale mais ne pas l'afficher tout de suite
+        MainFrame mainFrame = new MainFrame();
+
+        // Configurer le TrayIcon
+        PopupMenu popup = new PopupMenu();
+        TrayIcon trayIcon = new TrayIcon(createImage("tray_icon.png", "DOBI Tray Icon"));
+        SystemTray tray = SystemTray.getSystemTray();
+
+        MenuItem displayItem = new MenuItem("Afficher/Masquer");
+        displayItem.addActionListener(e -> mainFrame.setVisible(!mainFrame.isVisible()));
+        popup.add(displayItem);
+
+        popup.addSeparator();
+
+        MenuItem exitItem = new MenuItem("Quitter");
+        exitItem.addActionListener(e -> {
+            stopServices();
+            tray.remove(trayIcon);
+            System.exit(0);
+        });
+        popup.add(exitItem);
+
+        trayIcon.setPopupMenu(popup);
+        trayIcon.setToolTip("DOBI Service");
+
         try {
+            tray.add(trayIcon);
+        } catch (AWTException e) {
+            System.err.println("Impossible d'ajouter l'icône au SystemTray.");
+            return;
+        }
+        
+        System.out.println("Application DOBI démarrée en arrière-plan.");
+        System.out.println("Double-cliquez ou utilisez le menu pour afficher la console.");
+
+        trayIcon.addActionListener(e -> mainFrame.setVisible(!mainFrame.isVisible()));
+
+        // Démarrer les services en arrière-plan pour ne pas geler l'interface
+        startServices();
+    }
+    
+    private static void startServices() {
+        new Thread(() -> {
+            collectorService = new MachineManagerService();
+            persistenceService = new KafkaConsumerService(
+                collectorService.getAppProperty("kafka.bootstrap.servers"), 
+                "dobi-persistence-group", 
+                collectorService.getAppProperty("kafka.topic.tags.data"), 
+                collectorService.getEmf()
+            );
+            
+            new Thread(persistenceService).start();
             collectorService.start();
-            System.out.println("Service dÃ©marrÃ©. L'application tourne en tÃ¢che de fond.");
-            System.out.println("Appuyez sur Ctrl+C pour arrÃªter.");
-        } catch (Exception e) {
-            System.err.println("Une erreur critique est survenue au dÃ©marrage. L'application va s'arrÃªter.");
-            e.printStackTrace();
-            collectorService.stop();
-            persistenceService.stop(); // Tente un arrÃªt mÃªme en cas d'erreur
+        }).start();
+    }
+    
+    private static void stopServices() {
+        if(collectorService != null) collectorService.stop();
+        if(persistenceService != null) persistenceService.stop();
+    }
+
+    private static Image createImage(String path, String description) {
+        URL imageURL = Main.class.getClassLoader().getResource(path);
+        if (imageURL == null) {
+            System.err.println("Ressource non trouvée: " + path);
+            return null;
+        } else {
+            return (new ImageIcon(imageURL, description)).getImage();
         }
     }
 }
-

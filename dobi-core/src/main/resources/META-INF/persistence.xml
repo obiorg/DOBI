@@ -21,7 +21,7 @@
       <property name="jakarta.persistence.jdbc.user" value="obi"/>
       <property name="jakarta.persistence.jdbc.password" value="ob!"/>
       <property name="hibernate.dialect" value="org.hibernate.dialect.SQLServerDialect"/>
-      <property name="hibernate.show_sql" value="true"/>
+      <property name="hibernate.show_sql" value="false"/>
       <property name="hibernate.format_sql" value="true"/>
     </properties>
   </persistence-unit>
