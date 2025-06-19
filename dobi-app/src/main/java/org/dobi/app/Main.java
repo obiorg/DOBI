@@ -18,20 +18,20 @@ public class Main {
     }
 
     private static void createAndShowGUI() {
-        // Vérifier si le SystemTray est supporté
+        // VÃ©rifier si le SystemTray est supportÃ©
         if (!SystemTray.isSupported()) {
-            System.err.println("Le SystemTray n'est pas supporté sur ce système.");
-            // Lancer en mode console dégradé si pas de tray
+            System.err.println("Le SystemTray n'est pas supportÃ© sur ce systÃ¨me.");
+            // Lancer en mode console dÃ©gradÃ© si pas de tray
             startServices(); 
             return;
         }
 
-        // Créer la fenêtre principale mais ne pas l'afficher tout de suite
+        // CrÃ©er la fenÃªtre principale mais ne pas l'afficher tout de suite
         MainFrame mainFrame = new MainFrame();
 
         // Configurer le TrayIcon
         PopupMenu popup = new PopupMenu();
-        TrayIcon trayIcon = new TrayIcon(createImage("tray_icon.png", "DOBI Tray Icon"));
+        TrayIcon trayIcon = new TrayIcon(createImage("obi-signet-dim.png", "DOBI Tray Icon"));
         SystemTray tray = SystemTray.getSystemTray();
 
         MenuItem displayItem = new MenuItem("Afficher/Masquer");
@@ -54,16 +54,16 @@ public class Main {
         try {
             tray.add(trayIcon);
         } catch (AWTException e) {
-            System.err.println("Impossible d'ajouter l'icône au SystemTray.");
+            System.err.println("Impossible d'ajouter l'icÃ´ne au SystemTray.");
             return;
         }
         
-        System.out.println("Application DOBI démarrée en arrière-plan.");
+        System.out.println("Application DOBI dÃ©marrÃ©e en arriÃ¨re-plan.");
         System.out.println("Double-cliquez ou utilisez le menu pour afficher la console.");
 
         trayIcon.addActionListener(e -> mainFrame.setVisible(!mainFrame.isVisible()));
 
-        // Démarrer les services en arrière-plan pour ne pas geler l'interface
+        // DÃ©marrer les services en arriÃ¨re-plan pour ne pas geler l'interface
         startServices();
     }
     
@@ -90,10 +90,11 @@ public class Main {
     private static Image createImage(String path, String description) {
         URL imageURL = Main.class.getClassLoader().getResource(path);
         if (imageURL == null) {
-            System.err.println("Ressource non trouvée: " + path);
+            System.err.println("Ressource non trouvÃ©e: " + path);
             return null;
         } else {
             return (new ImageIcon(imageURL, description)).getImage();
         }
     }
 }
+
