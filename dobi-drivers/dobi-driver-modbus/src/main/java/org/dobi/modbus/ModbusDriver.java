@@ -48,7 +48,6 @@ public class ModbusDriver implements IDriver {
         }
         // L'ID de l'esclave Modbus (Unit ID)
         int unitId = machine.getBus() != null ? machine.getBus() : 1;
-
         String memoryArea = tag.getMemory().getName().toUpperCase();
         
         try {
