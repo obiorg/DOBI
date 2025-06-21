@@ -35,5 +35,10 @@
             <artifactId>dobi-kafka-producer</artifactId>
             <version>${project.version}</version>
         </dependency>
-    </dependencies>
+            <dependency>
+            <groupId>org.dobi</groupId>
+            <artifactId>dobi-ui-common</artifactId>
+            <version>{project.version}</version>
+        </dependency>    </dependencies>
 </project>
+

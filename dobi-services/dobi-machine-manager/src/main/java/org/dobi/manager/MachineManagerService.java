@@ -6,7 +6,7 @@ import jakarta.persistence.Persistence;
 import org.dobi.api.IDriver;
 import org.dobi.entities.Machine;
 import org.dobi.kafka.producer.KafkaProducerService;
-import org.dobi.app.ui.MachineStatusPanel;
+import org.dobi.ui.MachineStatusPanel;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.List;

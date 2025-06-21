@@ -1,6 +1,6 @@
 package org.dobi.app;
 
-import org.dobi.app.ui.MainFrame;
+import org.dobi.ui.MainFrame;
 import org.dobi.entities.Machine;
 import org.dobi.kafka.consumer.KafkaConsumerService;
 import org.dobi.manager.MachineManagerService;
@@ -9,6 +9,7 @@ import java.awt.*;
 import java.net.URL;
 import java.util.Collections;
 import java.util.List;
+import org.dobi.ui.MachineStatusPanel;
 
 public class Main {
     private static MachineManagerService collectorService;

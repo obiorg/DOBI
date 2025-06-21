@@ -30,6 +30,10 @@
             <groupId>org.dobi</groupId>
             <artifactId>dobi-driver-modbus</artifactId>
             <version>${project.version}</version>
+        </dependency>            <dependency>
+            <groupId>org.dobi</groupId>
+            <artifactId>dobi-ui-common</artifactId>
+            <version>{project.version}</version>
         </dependency>    </dependencies>
 
     <build>
@@ -61,4 +65,5 @@
         </plugins>
     </build>
 </project>
+
 

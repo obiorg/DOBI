@@ -1,6 +1,6 @@
-package org.dobi.app.ui;
+package org.dobi.ui;
 
-import org.dobi.app.util.TextAreaOutputStream;
+import org.dobi.ui.TextAreaOutputStream;
 import org.dobi.entities.Machine;
 import javax.swing.*;
 import java.awt.*;

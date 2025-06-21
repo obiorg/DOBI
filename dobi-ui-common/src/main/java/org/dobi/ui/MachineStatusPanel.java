@@ -1,4 +1,4 @@
-package org.dobi.app.ui;
+package org.dobi.ui;
 
 import org.dobi.entities.Machine;
 import javax.swing.*;

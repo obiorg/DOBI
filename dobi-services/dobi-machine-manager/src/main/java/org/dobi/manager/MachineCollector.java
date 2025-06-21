@@ -4,7 +4,7 @@ import org.dobi.api.IDriver;
 import org.dobi.dto.TagData;
 import org.dobi.entities.Machine;
 import org.dobi.kafka.producer.KafkaProducerService;
-import org.dobi.app.ui.MachineStatusPanel;
+import org.dobi.ui.MachineStatusPanel;
 import java.awt.Color;
 
 public class MachineCollector implements Runnable {

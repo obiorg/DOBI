@@ -1,4 +1,4 @@
-package org.dobi.app.util;
+package org.dobi.ui;
 
 import javax.swing.JTextArea;
 import javax.swing.SwingUtilities;
