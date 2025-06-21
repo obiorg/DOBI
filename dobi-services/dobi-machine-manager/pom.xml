@@ -8,37 +8,33 @@
         <artifactId>dobi-services</artifactId>
         <version>1.0-SNAPSHOT</version>
     </parent>
-
     <artifactId>dobi-machine-manager</artifactId>
     <name>DOBI :: Service :: Machine Manager</name>
-
     <dependencies>
         <dependency>
             <groupId>org.dobi</groupId>
             <artifactId>dobi-core</artifactId>
-            <version>${project.version}</version>
+            <version></version>
         </dependency>
         <dependency>
             <groupId>org.dobi</groupId>
             <artifactId>dobi-driver-api</artifactId>
-            <version>${project.version}</version>
+            <version></version>
         </dependency>
         <dependency>
             <groupId>org.dobi</groupId>
             <artifactId>dobi-driver-siemens</artifactId>
-            <version>${project.version}</version>
+            <version></version>
         </dependency>
-        
-        <!-- DÉPENDANCE MANQUANTE AJOUTÉE ICI -->
         <dependency>
             <groupId>org.dobi</groupId>
             <artifactId>dobi-kafka-producer</artifactId>
-            <version>${project.version}</version>
+            <version></version>
         </dependency>
-            <dependency>
+        <dependency>
             <groupId>org.dobi</groupId>
             <artifactId>dobi-ui-common</artifactId>
-            <version>{project.version}</version>
-        </dependency>    </dependencies>
+            <version></version>
+        </dependency>
+    </dependencies>
 </project>
-

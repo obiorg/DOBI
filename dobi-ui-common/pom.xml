@@ -17,7 +17,7 @@
         <dependency>
             <groupId>org.dobi</groupId>
             <artifactId>dobi-core</artifactId>
-            <version>{project.version}</version>
+            <version></version>
         </dependency>
     </dependencies>
 </project>

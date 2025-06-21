@@ -13,28 +13,28 @@
     <name>DOBI :: Application</name>
     <description>Point d'entrée principal de l'application DOBI.</description>
 
-    <dependencies>
+        <dependencies>
         <dependency>
             <groupId>org.dobi</groupId>
             <artifactId>dobi-machine-manager</artifactId>
-            <version>${project.version}</version>
+            <version></version>
         </dependency>
-        
-        <!-- DÉPENDANCE MANQUANTE AJOUTÉE ICI -->
         <dependency>
             <groupId>org.dobi</groupId>
             <artifactId>dobi-kafka-consumer</artifactId>
-            <version>${project.version}</version>
+            <version></version>
         </dependency>
-            <dependency>
+        <dependency>
             <groupId>org.dobi</groupId>
             <artifactId>dobi-driver-modbus</artifactId>
-            <version>${project.version}</version>
-        </dependency>            <dependency>
+            <version></version>
+        </dependency>
+        <dependency>
             <groupId>org.dobi</groupId>
             <artifactId>dobi-ui-common</artifactId>
-            <version>{project.version}</version>
-        </dependency>    </dependencies>
+            <version></version>
+        </dependency>
+    </dependencies>
 
     <build>
         <plugins>
@@ -65,5 +65,6 @@
         </plugins>
     </build>
 </project>
+
 
 
