@@ -5,19 +5,22 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>org.dobi</groupId>
-        <artifactId>dobi-parent</artifactId>
+        <artifactId>dobi-drivers</artifactId>
         <version>1.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>dobi-ui-common</artifactId>
-    <name>DOBI :: UI Common</name>
-    <description>Composants graphiques Swing communs.</description>
+    <artifactId>dobi-driver-opcua</artifactId>
+    <name>DOBI :: Driver :: OPC UA</name>
 
     <dependencies>
         <dependency>
             <groupId>org.dobi</groupId>
-            <artifactId>dobi-core</artifactId>
-            <version>${project.version}</version>
+            <artifactId>dobi-driver-api</artifactId>
+            <version>{project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.milo</groupId>
+            <artifactId>sdk-client</artifactId>
         </dependency>
     </dependencies>
 </project>

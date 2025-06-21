@@ -19,8 +19,10 @@
             <module>dobi-moka</module>
         <module>dobi-driver-siemens</module>
             <module>dobi-driver-modbus</module>
+            <module>dobi-driver-opcua</module>
     </modules>
 
 </project>
+
 
 

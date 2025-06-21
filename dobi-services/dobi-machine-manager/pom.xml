@@ -14,27 +14,27 @@
         <dependency>
             <groupId>org.dobi</groupId>
             <artifactId>dobi-core</artifactId>
-            <version></version>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.dobi</groupId>
             <artifactId>dobi-driver-api</artifactId>
-            <version></version>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.dobi</groupId>
             <artifactId>dobi-driver-siemens</artifactId>
-            <version></version>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.dobi</groupId>
             <artifactId>dobi-kafka-producer</artifactId>
-            <version></version>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.dobi</groupId>
             <artifactId>dobi-ui-common</artifactId>
-            <version></version>
+            <version>${project.version}</version>
         </dependency>
     </dependencies>
 </project>
