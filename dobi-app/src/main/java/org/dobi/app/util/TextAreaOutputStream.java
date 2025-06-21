@@ -1,14 +1,10 @@
-package org.dobi.app;
+package org.dobi.app.util;
 
 import javax.swing.JTextArea;
 import javax.swing.SwingUtilities;
 import java.io.OutputStream;
 import java.io.IOException;
 
-/**
- * Un OutputStream qui écrit son contenu dans une JTextArea.
- * Utilisé pour rediriger System.out et System.err vers l'interface graphique.
- */
 public class TextAreaOutputStream extends OutputStream {
 
     private final JTextArea textArea;
@@ -19,18 +15,14 @@ public class TextAreaOutputStream extends OutputStream {
     }
 
     @Override
-    public void flush() {
-        // Pas nécessaire pour ce type de stream
-    }
+    public void flush() {}
 
     @Override
-    public void close() {
-        // Pas nécessaire pour ce type de stream
-    }
+    public void close() {}
 
     @Override
     public void write(int b) throws IOException {
-        if (b == '\r') return; // On ignore les retours chariot
+        if (b == '\r') return;
         
         if (b == '\n') {
             final String text = sb.toString() + "\n";
