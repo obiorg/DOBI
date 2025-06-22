@@ -6,12 +6,11 @@ import org.dobi.entities.Tag;
 import org.eclipse.milo.opcua.sdk.client.OpcUaClient;
 import org.eclipse.milo.opcua.sdk.client.api.config.OpcUaClientConfig;
 import org.eclipse.milo.opcua.sdk.client.identity.UsernameProvider;
+import org.eclipse.milo.opcua.stack.client.DiscoveryClient;
 import org.eclipse.milo.opcua.stack.core.security.SecurityPolicy;
 import org.eclipse.milo.opcua.stack.core.types.structured.EndpointDescription;
-import org.eclipse.milo.opcua.stack.core.util.EndpointUtil;
 
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 
 public class OpcUaDriver implements IDriver {
 
@@ -26,21 +25,21 @@ public class OpcUaDriver implements IDriver {
     @Override
     public boolean connect() {
         if (machine == null || machine.getAddress() == null || machine.getAddress().trim().isEmpty()) {
-            System.err.println("Adresse IP non configurée pour la machine OPC UA.");
+            System.err.println("Adresse IP non configuree pour la machine OPC UA.");
             return false;
         }
 
         try {
             int port = machine.getPort() != null ? machine.getPort() : 4840;
             String endpointUrl = String.format("opc.tcp://%s:%d", machine.getAddress(), port);
-            System.out.println("Tentative de connexion à l'endpoint OPC UA : " + endpointUrl);
+            System.out.println("Tentative de connexion a l'endpoint OPC UA : " + endpointUrl);
 
-            List<EndpointDescription> endpoints = OpcUaClient.getEndpoints(endpointUrl).get();
+            List<EndpointDescription> endpoints = DiscoveryClient.getEndpoints(endpointUrl).get();
 
             EndpointDescription endpoint = endpoints.stream()
                 .filter(e -> e.getSecurityPolicyUri().equals(SecurityPolicy.None.getUri()))
                 .findFirst()
-                .orElseThrow(() -> new Exception("Aucun endpoint de sécurité compatible trouvé."));
+                .orElseThrow(() -> new Exception("Aucun endpoint de securite compatible trouve."));
 
             OpcUaClientConfig config = OpcUaClientConfig.builder()
                 .setEndpoint(endpoint)
@@ -51,7 +50,7 @@ public class OpcUaDriver implements IDriver {
             client.connect().get();
             return true;
         } catch (Exception e) {
-            System.err.println("Erreur de connexion OPC UA à " + machine.getName() + ": " + e.getMessage());
+            System.err.println("Erreur de connexion OPC UA a " + machine.getName() + ": " + e.getMessage());
             return false;
         }
     }
