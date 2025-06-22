@@ -6,7 +6,7 @@ import jakarta.persistence.Persistence;
 import org.dobi.api.IDriver;
 import org.dobi.entities.Machine;
 import org.dobi.kafka.producer.KafkaProducerService;
-import org.dobi.ui.MachineStatusPanel;
+import org.dobi.ui.MachineStatusPanel; // Correction de l'import
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.List;
@@ -29,10 +29,10 @@ public class MachineManagerService {
         this.emf = Persistence.createEntityManagerFactory("DOBI-PU");
         this.statusPanel = statusPanel;
         loadAppProperties();
-        loadDriverProperties();
+        loadDriverProperties(); // Chargement des drivers
     }
     
-    // Constructeur sans argument pour le premier chargement des machines
+    // Constructeur sans argument pour le premier chargement
     public MachineManagerService() {
          this.emf = Persistence.createEntityManagerFactory("DOBI-PU");
     }
@@ -55,16 +55,41 @@ public class MachineManagerService {
         try (InputStream input = getClass().getClassLoader().getResourceAsStream("drivers.properties")) {
             if (input == null) { System.err.println("ERREUR: Le fichier drivers.properties est introuvable !"); return; }
             driverProperties.load(input);
+            
+            // --- AJOUT DE LOG POUR LE DEBUG ---
+            System.out.println("--- Contenu de drivers.properties chargé ---");
+            driverProperties.forEach((key, value) -> System.out.println("  -> Clé lue: '" + key + "' | Classe: '" + value + "'"));
+            System.out.println("------------------------------------------");
+            
         } catch (Exception ex) { ex.printStackTrace(); }
     }
 
     private IDriver createDriverForMachine(Machine machine) {
+        if (machine.getDriver() == null || machine.getDriver().getDriver() == null) {
+            System.err.println("Driver non défini pour la machine " + machine.getName());
+            return null;
+        }
+
         String driverName = machine.getDriver().getDriver();
+        
+        // --- AJOUT DE LOG POUR LE DEBUG ---
+        System.out.println("Machine '" + machine.getName() + "': Recherche du driver pour la clé: '" + driverName + "'");
+        
         String driverClassName = driverProperties.getProperty(driverName);
-        if (driverClassName == null) { System.err.println("Aucune classe associee au driver '" + driverName + "'"); return null; }
+        if (driverClassName == null) { 
+            System.err.println("--> ECHEC: Aucune classe associée au driver '" + driverName + "'"); 
+            return null; 
+        }
+        
+        System.out.println("--> SUCCES: Classe trouvée: '" + driverClassName + "'");
+        
         try {
             return (IDriver) Class.forName(driverClassName).getConstructor().newInstance();
-        } catch (Exception e) { System.err.println("Erreur instanciation driver '" + driverClassName + "'"); return null; }
+        } catch (Exception e) { 
+            System.err.println("--> ERREUR: Erreur d'instanciation du driver '" + driverClassName + "'"); 
+            e.printStackTrace();
+            return null;
+        }
     }
     
     public void start() {
