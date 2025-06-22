@@ -32,6 +32,12 @@ public class Machine extends BaseEntity {
     @JoinColumn(name = "driver", nullable = false)
     private MachDriver driver;
 
+    
+    @Column(name = "mqtt_user")
+    private String mqttUser;
+
+    @Column(name = "mqtt_password")
+    private String mqttPassword;
     @OneToMany(mappedBy = "machine", cascade = CascadeType.ALL)
     private List<Tag> tags;
 
@@ -57,5 +63,22 @@ public class Machine extends BaseEntity {
 
     public Integer getBus() { return bus; }
     public void setBus(Integer bus) { this.bus = bus; }
+
+    public String getMqttUser() {
+        return mqttUser;
+    }
+
+    public void setMqttUser(String mqttUser) {
+        this.mqttUser = mqttUser;
+    }
+
+    public String getMqttPassword() {
+        return mqttPassword;
+    }
+
+    public void setMqttPassword(String mqttPassword) {
+        this.mqttPassword = mqttPassword;
+    }
 }
+
 
