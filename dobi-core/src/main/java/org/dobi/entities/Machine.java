@@ -22,11 +22,13 @@ public class Machine extends BaseEntity {
     private Integer slot;
     private Integer bus;
 
+    // --- Lignes ajoutées ---
     @Column(name = "mqtt_user")
     private String mqttUser;
 
     @Column(name = "mqtt_password")
     private String mqttPassword;
+    // --- Fin des lignes ajoutées ---
 
     @OneToMany(mappedBy = "machine", cascade = CascadeType.ALL)
     private List<Tag> tags;
@@ -52,10 +54,14 @@ public class Machine extends BaseEntity {
     public void setSlot(Integer slot) { this.slot = slot; }
     public Integer getBus() { return bus; }
     public void setBus(Integer bus) { this.bus = bus; }
+    
+    // --- Méthodes ajoutées ---
     public String getMqttUser() { return mqttUser; }
     public void setMqttUser(String mqttUser) { this.mqttUser = mqttUser; }
     public String getMqttPassword() { return mqttPassword; }
     public void setMqttPassword(String mqttPassword) { this.mqttPassword = mqttPassword; }
+    // --- Fin des méthodes ajoutées ---
+
     public List<Tag> getTags() { return tags; }
     public void setTags(List<Tag> tags) { this.tags = tags; }
     public Company getCompany() { return company; }
