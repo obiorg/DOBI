@@ -4,9 +4,14 @@ import org.dobi.api.IDriver;
 import org.dobi.entities.Machine;
 import org.dobi.entities.Tag;
 import org.eclipse.milo.opcua.sdk.client.OpcUaClient;
-import org.eclipse.milo.opcua.stack.core.types.builtin.DataValue;
-import org.eclipse.milo.opcua.stack.core.types.builtin.NodeId;
+import org.eclipse.milo.opcua.sdk.client.identity.UsernameProvider;
+import org.eclipse.milo.opcua.stack.core.security.SecurityPolicy;
 import org.eclipse.milo.opcua.stack.core.types.structured.EndpointDescription;
+import org.eclipse.milo.opcua.stack.core.util.EndpointUtil;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
 
 public class OpcUaDriver implements IDriver {
 
@@ -24,21 +29,40 @@ public class OpcUaDriver implements IDriver {
             System.err.println("Adresse IP non configurée pour la machine OPC UA.");
             return false;
         }
-        
+
         try {
-            // CORRECTION : Construire dynamiquement l'URL à partir des champs de la machine
-            int port = machine.getPort() != null ? machine.getPort() : 4840; // Port standard pour OPC UA
+            int port = machine.getPort() != null ? machine.getPort() : 4840;
             String endpointUrl = String.format("opc.tcp://%s:%d", machine.getAddress(), port);
-            
             System.out.println("Tentative de connexion à l'endpoint OPC UA : " + endpointUrl);
 
-            client = OpcUaClient.create(endpointUrl);
+            // 1. Découvrir les points d'accès (endpoints) du serveur
+            List<EndpointDescription> endpoints = OpcUaClient.getEndpoints(endpointUrl).get();
+
+            // 2. Choisir un endpoint. On privilégie la sécurité, mais on accepte "None" si c'est la seule option.
+            EndpointDescription endpoint = endpoints.stream()
+                .filter(e -> e.getSecurityPolicyUri().equals(SecurityPolicy.None.getUri()))
+                .findFirst()
+                .orElseThrow(() -> new Exception("Aucun endpoint de sécurité compatible trouvé."));
             
-            // Connexion à la session
+            // 3. Création du client avec la configuration de l'endpoint
+            client = OpcUaClient.create(endpoint);
+
+            // 4. Gestion de l'identité (authentification)
+            String username = machine.getMqttUser(); // On réutilise le champ mqtt_user
+            String password = machine.getMqttPassword(); // On réutilise le champ mqtt_password
+
+            if (username != null && !username.trim().isEmpty()) {
+                System.out.println("Utilisation de l'authentification avec l'utilisateur: " + username);
+                client.setIdentityProvider(new UsernameProvider(username, password));
+            } else {
+                System.out.println("Tentative de connexion anonyme.");
+            }
+            
+            // 5. Connexion
             client.connect().get();
             return true;
         } catch (Exception e) {
-            System.err.println("Erreur de connexion OPC UA a " + machine.getName() + ": " + e.getMessage());
+            System.err.println("Erreur de connexion OPC UA à " + machine.getName() + ": " + e.getMessage());
             return false;
         }
     }
@@ -52,22 +76,18 @@ public class OpcUaDriver implements IDriver {
 
     @Override
     public boolean isConnected() {
-        // On vérifie si le client existe et si la session
-        // (qui est un CompletableFuture) est terminée et ne contient pas d'erreur.
         return client != null && client.getSession().isDone() && !client.getSession().isCompletedExceptionally();
     }
 
     @Override
     public Object read(Tag tag) {
+        // La logique de lecture sera implémentée dans la prochaine étape
         System.out.println("Lecture OPC UA pour le tag " + tag.getName() + " (non implementee)");
-        // TODO: Implémenter la logique de lecture des noeuds OPC UA.
-        // L'adresse sera dans tag.getName() ou un autre champ (ex: 'ns=2;s=MyVariable')
         return null;
     }
 
     @Override
     public void write(Tag tag, Object value) {
         System.out.println("Ecriture OPC UA pour le tag " + tag.getName() + " (non implementee)");
-        // TODO: Implémenter la logique d'écriture
     }
 }
