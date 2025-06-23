@@ -22,7 +22,6 @@
         <module>dobi-services</module>
             <module>dobi-ui-common</module>
         <module>dobi-app</module>
-            <module>dobi-api-rest</module>
     </modules>
 
     <dependencyManagement>

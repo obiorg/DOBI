@@ -57,8 +57,8 @@ public class MachineManagerService {
             driverProperties.load(input);
             
             // --- AJOUT DE LOG POUR LE DEBUG ---
-            System.out.println("--- Contenu de drivers.properties chargÃƒÂ© ---");
-            driverProperties.forEach((key, value) -> System.out.println("  -> ClÃƒÂ© lue: '" + key + "' | Classe: '" + value + "'"));
+            System.out.println("--- Contenu de drivers.properties chargÃƒÆ’Ã‚Â© ---");
+            driverProperties.forEach((key, value) -> System.out.println("  -> ClÃƒÆ’Ã‚Â© lue: '" + key + "' | Classe: '" + value + "'"));
             System.out.println("------------------------------------------");
             
         } catch (Exception ex) { ex.printStackTrace(); }
@@ -66,22 +66,22 @@ public class MachineManagerService {
 
     private IDriver createDriverForMachine(Machine machine) {
         if (machine.getDriver() == null || machine.getDriver().getDriver() == null) {
-            System.err.println("Driver non dÃƒÂ©fini pour la machine " + machine.getName());
+            System.err.println("Driver non dÃƒÆ’Ã‚Â©fini pour la machine " + machine.getName());
             return null;
         }
 
         String driverName = machine.getDriver().getDriver();
         
         // --- AJOUT DE LOG POUR LE DEBUG ---
-        System.out.println("Machine '" + machine.getName() + "': Recherche du driver pour la clÃƒÂ©: '" + driverName + "'");
+        System.out.println("Machine '" + machine.getName() + "': Recherche du driver pour la clÃƒÆ’Ã‚Â©: '" + driverName + "'");
         
         String driverClassName = driverProperties.getProperty(driverName);
         if (driverClassName == null) { 
-            System.err.println("--> ECHEC: Aucune classe associÃƒÂ©e au driver '" + driverName + "'"); 
+            System.err.println("--> ECHEC: Aucune classe associÃƒÆ’Ã‚Â©e au driver '" + driverName + "'"); 
             return null; 
         }
         
-        System.out.println("--> SUCCES: Classe trouvÃƒÂ©e: '" + driverClassName + "'");
+        System.out.println("--> SUCCES: Classe trouvÃƒÆ’Ã‚Â©e: '" + driverClassName + "'");
         
         try {
             return (IDriver) Class.forName(driverClassName).getConstructor().newInstance();
@@ -133,9 +133,9 @@ public class MachineManagerService {
 
 
     public void restartCollector(long machineId) {
-        System.out.println("Demande de redémarrage pour la machine ID: " + machineId);
+        System.out.println("Demande de redÃ©marrage pour la machine ID: " + machineId);
         
-        // Arrêter l'ancien collecteur s'il existe
+        // ArrÃªter l'ancien collecteur s'il existe
         MachineCollector oldCollector = activeCollectors.get(machineId);
         if (oldCollector != null) {
             oldCollector.stop();
@@ -150,7 +150,7 @@ public class MachineManagerService {
                 .setParameter("id", machineId)
                 .getSingleResult();
         } catch (Exception e) {
-            System.err.println("Impossible de retrouver la machine avec l'ID " + machineId + " pour la redémarrer.");
+            System.err.println("Impossible de retrouver la machine avec l'ID " + machineId + " pour la redÃ©marrer.");
             return;
         } finally {
             em.close();
@@ -165,6 +165,14 @@ public class MachineManagerService {
             executorService.submit(newCollector);
         }
     }
+
+
+    public Map<Long, String> getMachineStatuses() {
+        Map<Long, String> statuses = new HashMap<>();
+        activeCollectors.forEach((id, collector) -> statuses.put(id, collector.getCurrentStatus()));
+        return statuses;
+    }
 }
+
 
 

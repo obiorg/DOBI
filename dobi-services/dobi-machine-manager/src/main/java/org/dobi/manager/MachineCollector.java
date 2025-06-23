@@ -11,6 +11,7 @@ public class MachineCollector implements Runnable {
     private final Machine machine;
     private final IDriver driver;
     private volatile boolean running = true;
+    private volatile String currentStatus = "Initialisation...";
     private final KafkaProducerService kafkaProducerService;
     private final MachineStatusPanel statusPanel;
 
@@ -27,11 +28,11 @@ public class MachineCollector implements Runnable {
         while (running) {
             try {
                 if (!driver.isConnected()) {
-                    statusPanel.updateMachineStatus(machine.getId(), "Connexion...", Color.ORANGE);
+                    updateStatus("Connexion...", Color.ORANGE);
                     if (driver.connect()) {
-                        statusPanel.updateMachineStatus(machine.getId(), "Connecte", Color.GREEN);
+                        updateStatus("Connecte", Color.GREEN);
                     } else {
-                        statusPanel.updateMachineStatus(machine.getId(), "Erreur Connexion", Color.RED);
+                        updateStatus("Erreur Connexion", Color.RED);
                         Thread.sleep(10000);
                         continue;
                     }
@@ -49,7 +50,7 @@ public class MachineCollector implements Runnable {
                         }
                     }
                 }
-                statusPanel.updateMachineStatus(machine.getId(), "Connecte (lus: " + tagsRead + ")", Color.GREEN);
+                updateStatus("Connecte (lus: " + tagsRead + ")", Color.GREEN);
                 Thread.sleep(5000);
             } catch (InterruptedException e) {
                 running = false;
@@ -57,7 +58,14 @@ public class MachineCollector implements Runnable {
             }
         }
         driver.disconnect();
-        statusPanel.updateMachineStatus(machine.getId(), "Deconnecte", Color.DARK_GRAY);
+        updateStatus("Deconnecte", Color.DARK_GRAY);
     }
     public void stop() { this.running = false; }
+    public String getCurrentStatus() { return currentStatus; }
+
+    private void updateStatus(String status, Color color) {
+        this.currentStatus = status;
+        statusPanel.updateMachineStatus(machine.getId(), status, color);
+    }
 }
+
