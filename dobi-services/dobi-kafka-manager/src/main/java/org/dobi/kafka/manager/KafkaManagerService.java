@@ -1,5 +1,8 @@
 package org.dobi.kafka.manager;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+
 public class KafkaManagerService {
 
     public KafkaManagerService() {
@@ -9,8 +12,8 @@ public class KafkaManagerService {
     public void checkStatus() {
         System.out.println("Vérification du statut de Kafka et Zookeeper...");
         
-        // La logique de vérification des processus dépend de l'OS.
-        // Ceci est un placeholder.
+        // Cette approche est dépendante de l'OS (Windows dans ce cas)
+        // Elle cherche si un processus Java contient "zookeeper" ou "kafka" dans son nom.
         boolean isZookeeperRunning = isProcessRunning("zookeeper");
         boolean isKafkaRunning = isProcessRunning("kafka");
 
@@ -19,14 +22,23 @@ public class KafkaManagerService {
     }
     
     /**
-     * Méthode de placeholder pour vérifier si un processus est en cours.
-     * L'implémentation réelle dépendra du système d'exploitation cible.
+     * Méthode simple pour vérifier si un processus contenant le mot-clé est en cours.
+     * Note: Ceci est une implémentation basique pour Windows.
      */
     private boolean isProcessRunning(String processName) {
-        // TODO: Implémenter la logique de détection de processus.
-        // Sur Windows, on pourrait utiliser "tasklist | findstr <processName>"
-        // Sur Linux, on pourrait utiliser "ps -ef | grep <processName>"
-        System.out.println("    (Logique de détection pour '" + processName + "' non implémentée)");
-        return false;
+        try {
+            Process process = Runtime.getRuntime().exec("jps -l");
+            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            String line;
+            while ((line = reader.readLine()) != null) {
+                if (line.toLowerCase().contains(processName.toLowerCase())) {
+                    return true;
+                }
+            }
+            return false;
+        } catch (Exception e) {
+            System.err.println("Impossible de vérifier les processus Java en cours: " + e.getMessage());
+            return false;
+        }
     }
 }

@@ -2,6 +2,7 @@ package org.dobi.app;
 
 import org.dobi.entities.Machine;
 import org.dobi.kafka.consumer.KafkaConsumerService;
+import org.dobi.kafka.manager.KafkaManagerService;
 import org.dobi.manager.MachineManagerService;
 import org.dobi.ui.MainFrame;
 
@@ -21,6 +22,8 @@ public class Main {
     private static List<Machine> machines;
 
     public static void main(String[] args) {
+        new KafkaManagerService().checkStatus();
+
         SwingUtilities.invokeLater(Main::createAndShowGUI);
     }
 
@@ -65,7 +68,7 @@ public class Main {
             SystemTray.getSystemTray().add(trayIcon);
         } catch (AWTException e) { System.err.println("Impossible d'ajouter l'icone au SystemTray."); return; }
         
-        // 3. Lier les actions des boutons de redémarrage
+        // 3. Lier les actions des boutons de redÃ©marrage
         for (Machine machine : machines) {
             JButton restartButton = mainFrame.getStatusPanel().getRestartButton(machine.getId());
             if (restartButton != null) {
@@ -77,7 +80,7 @@ public class Main {
             }
         }
         
-        // 4. Démarrer les services et notifier l'utilisateur
+        // 4. DÃ©marrer les services et notifier l'utilisateur
         startServices(mainFrame.getStatusPanel());
         trayIcon.displayMessage("DOBI Service", "L'application a demarre avec succes.", TrayIcon.MessageType.INFO);
     }
@@ -125,3 +128,4 @@ public class Main {
         return image.getScaledInstance(trayIconSize.width, trayIconSize.height, Image.SCALE_SMOOTH);
     }
 }
+
