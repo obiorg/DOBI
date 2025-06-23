@@ -25,7 +25,7 @@
             <version>${project.version}</version>
         </dependency>
         
-        <!-- Dépendances explicites vers les drivers pour les inclure dans le JAR final -->
+        <!-- Dépendances explicites vers tous les drivers et modules pour les inclure dans le JAR final -->
         <dependency>
             <groupId>org.dobi</groupId>
             <artifactId>dobi-driver-modbus</artifactId>
@@ -36,17 +36,17 @@
             <artifactId>dobi-driver-opcua</artifactId>
             <version>${project.version}</version>
         </dependency>
-
         <dependency>
             <groupId>org.dobi</groupId>
             <artifactId>dobi-ui-common</artifactId>
             <version>${project.version}</version>
         </dependency>
-            <dependency>
+        <dependency>
             <groupId>org.dobi</groupId>
             <artifactId>dobi-kafka-manager</artifactId>
-            <version>{project.version}</version>
-        </dependency>    </dependencies>
+            <version>${project.version}</version>
+        </dependency>
+    </dependencies>
 
     <build>
         <plugins>
@@ -77,4 +77,3 @@
         </plugins>
     </build>
 </project>
-

@@ -57,8 +57,8 @@ public class MachineManagerService {
             driverProperties.load(input);
             
             // --- AJOUT DE LOG POUR LE DEBUG ---
-            System.out.println("--- Contenu de drivers.properties chargé ---");
-            driverProperties.forEach((key, value) -> System.out.println("  -> Clé lue: '" + key + "' | Classe: '" + value + "'"));
+            System.out.println("--- Contenu de drivers.properties chargÃ© ---");
+            driverProperties.forEach((key, value) -> System.out.println("  -> ClÃ© lue: '" + key + "' | Classe: '" + value + "'"));
             System.out.println("------------------------------------------");
             
         } catch (Exception ex) { ex.printStackTrace(); }
@@ -66,22 +66,22 @@ public class MachineManagerService {
 
     private IDriver createDriverForMachine(Machine machine) {
         if (machine.getDriver() == null || machine.getDriver().getDriver() == null) {
-            System.err.println("Driver non défini pour la machine " + machine.getName());
+            System.err.println("Driver non dÃ©fini pour la machine " + machine.getName());
             return null;
         }
 
         String driverName = machine.getDriver().getDriver();
         
         // --- AJOUT DE LOG POUR LE DEBUG ---
-        System.out.println("Machine '" + machine.getName() + "': Recherche du driver pour la clé: '" + driverName + "'");
+        System.out.println("Machine '" + machine.getName() + "': Recherche du driver pour la clÃ©: '" + driverName + "'");
         
         String driverClassName = driverProperties.getProperty(driverName);
         if (driverClassName == null) { 
-            System.err.println("--> ECHEC: Aucune classe associée au driver '" + driverName + "'"); 
+            System.err.println("--> ECHEC: Aucune classe associÃ©e au driver '" + driverName + "'"); 
             return null; 
         }
         
-        System.out.println("--> SUCCES: Classe trouvée: '" + driverClassName + "'");
+        System.out.println("--> SUCCES: Classe trouvÃ©e: '" + driverClassName + "'");
         
         try {
             return (IDriver) Class.forName(driverClassName).getConstructor().newInstance();
@@ -110,7 +110,7 @@ public class MachineManagerService {
     public List<Machine> getMachinesFromDb() {
         EntityManager em = emf.createEntityManager();
         try {
-            return em.createQuery("SELECT m FROM Machine m JOIN FETCH m.driver LEFT JOIN FETCH m.tags t LEFT JOIN FETCH t.type ty LEFT JOIN FETCH t.memory", Machine.class).getResultList();
+            return em.createQuery(("SELECT m FROM Machine m JOIN FETCH m.driver JOIN FETCH m.company LEFT JOIN FETCH m.tags t LEFT JOIN FETCH t.type ty LEFT JOIN FETCH t.memory"), Machine.class).getResultList();
         } finally { em.close(); }
     }
     
@@ -131,3 +131,4 @@ public class MachineManagerService {
         System.out.println("Machine Manager Service arrete.");
     }
 }
+
