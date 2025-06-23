@@ -12,6 +12,7 @@ public class MachineCollector implements Runnable {
     private final IDriver driver;
     private volatile boolean running = true;
     private volatile String currentStatus = "Initialisation...";
+    private volatile String currentStatus = "Initialisation...";
     private final KafkaProducerService kafkaProducerService;
     private final MachineStatusPanel statusPanel;
 
@@ -67,5 +68,12 @@ public class MachineCollector implements Runnable {
         this.currentStatus = status;
         statusPanel.updateMachineStatus(machine.getId(), status, color);
     }
+    public String getCurrentStatus() { return currentStatus; }
+
+    private void updateStatus(String status, Color color) {
+        this.currentStatus = status;
+        updateStatus(status, color);
+    }
 }
+
 
