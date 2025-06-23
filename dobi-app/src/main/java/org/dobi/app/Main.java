@@ -1,27 +1,26 @@
 package org.dobi.app;
 
-import org.dobi.ui.MainFrame;
 import org.dobi.entities.Machine;
 import org.dobi.kafka.consumer.KafkaConsumerService;
-import org.dobi.kafka.manager.KafkaManagerService;
 import org.dobi.manager.MachineManagerService;
+import org.dobi.ui.MainFrame;
+
 import javax.swing.*;
 import java.awt.*;
 import java.net.URL;
 import java.util.Collections;
 import java.util.List;
-import org.dobi.ui.MachineStatusPanel;
 
 public class Main {
+
     private static MachineManagerService collectorService;
     private static KafkaConsumerService persistenceService;
     private static MainFrame mainFrame;
     private static TrayIcon trayIcon;
+    // CORRECTION: La liste des machines est maintenant un champ statique
+    private static List<Machine> machines;
 
     public static void main(String[] args) {
-        KafkaManagerService kafkaManager = new KafkaManagerService();
-        kafkaManager.checkStatus();
-
         SwingUtilities.invokeLater(Main::createAndShowGUI);
     }
 
@@ -31,17 +30,11 @@ public class Main {
 
         if (!SystemTray.isSupported()) {
             System.err.println("Le SystemTray n'est pas supporte sur ce systeme.");
-            // Logique de secours sans TrayIcon
-            List<Machine> machines = new MachineManagerService().getMachinesFromDb();
-            mainFrame = new MainFrame(machines);
-            mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-            mainFrame.setVisible(true);
-            startServices(mainFrame.getStatusPanel());
+            startInHeadlessMode();
             return;
         }
 
         // 1. Charger les machines une seule fois pour construire l'UI
-        List<Machine> machines = Collections.emptyList();
         try {
              machines = new MachineManagerService().getMachinesFromDb();
         } catch (Exception e) {
@@ -72,28 +65,34 @@ public class Main {
             SystemTray.getSystemTray().add(trayIcon);
         } catch (AWTException e) { System.err.println("Impossible d'ajouter l'icone au SystemTray."); return; }
         
-        // 3. DÃƒÂ©marrer les services
-        startServices(mainFrame.getStatusPanel());
-        trayIcon.displayMessage("DOBI Service", "L'application a demarre avec succes.", TrayIcon.MessageType.INFO);
-
-        // 4. Lier les actions des boutons de redémarrage
+        // 3. Lier les actions des boutons de redémarrage
         for (Machine machine : machines) {
             JButton restartButton = mainFrame.getStatusPanel().getRestartButton(machine.getId());
             if (restartButton != null) {
                 restartButton.addActionListener(e -> {
-                    // Le service doit être initialisé pour que ça marche
                     if (collectorService != null) {
                         collectorService.restartCollector(machine.getId());
                     }
                 });
             }
         }
+        
+        // 4. Démarrer les services et notifier l'utilisateur
+        startServices(mainFrame.getStatusPanel());
+        trayIcon.displayMessage("DOBI Service", "L'application a demarre avec succes.", TrayIcon.MessageType.INFO);
+    }
+
+    private static void startInHeadlessMode() {
+        mainFrame = new MainFrame(Collections.emptyList());
+        mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        mainFrame.setVisible(true);
+        startServices(mainFrame.getStatusPanel());
     }
     
-    private static void startServices(MachineStatusPanel statusPanel) {
+    private static void startServices(org.dobi.ui.MachineStatusPanel statusPanel) {
         new Thread(() -> {
             collectorService = new MachineManagerService(statusPanel);
-            collectorService.initializeKafka(); // Initialiser Kafka aprÃƒÂ¨s avoir chargÃƒÂ© les properties
+            collectorService.initializeKafka();
             
             persistenceService = new KafkaConsumerService(
                 collectorService.getAppProperty("kafka.bootstrap.servers"), 
@@ -110,19 +109,6 @@ public class Main {
     private static void quitApplication() {
         new Thread(() -> {
             trayIcon.displayMessage("DOBI Service", "Arret de l'application en cours...", TrayIcon.MessageType.INFO);
-
-        // 4. Lier les actions des boutons de redémarrage
-        for (Machine machine : machines) {
-            JButton restartButton = mainFrame.getStatusPanel().getRestartButton(machine.getId());
-            if (restartButton != null) {
-                restartButton.addActionListener(e -> {
-                    // Le service doit être initialisé pour que ça marche
-                    if (collectorService != null) {
-                        collectorService.restartCollector(machine.getId());
-                    }
-                });
-            }
-        }
             if(collectorService != null) collectorService.stop();
             if(persistenceService != null) persistenceService.stop();
             System.out.println("Application DOBI arretee proprement.");
@@ -133,14 +119,9 @@ public class Main {
 
     private static Image createImage(String path) {
         URL imageURL = Main.class.getClassLoader().getResource(path);
-        if (imageURL == null) {
-            System.err.println("Ressource non trouvee: " + path);
-            return null;
-        }
+        if (imageURL == null) { System.err.println("Ressource non trouvee: " + path); return null; }
         Image image = new ImageIcon(imageURL).getImage();
         Dimension trayIconSize = SystemTray.getSystemTray().getTrayIconSize();
         return image.getScaledInstance(trayIconSize.width, trayIconSize.height, Image.SCALE_SMOOTH);
     }
 }
-
-
