@@ -11,21 +11,25 @@
     </parent>
     <artifactId>dobi-app</artifactId>
     <name>DOBI :: Application</name>
+    <description>Point d'entrée principal de l'application DOBI avec API REST embarquée.</description>
+
     <properties>
         <java.version>17</java.version>
         <spring-boot.version>3.3.1</spring-boot.version>
     </properties>
+
     <dependencyManagement>
         <dependencies>
             <dependency>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-dependencies</artifactId>
-                <version>{spring-boot.version}</version>
+                <version>${spring-boot.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
         </dependencies>
     </dependencyManagement>
+
     <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -34,20 +38,21 @@
         <dependency>
             <groupId>org.dobi</groupId>
             <artifactId>dobi-machine-manager</artifactId>
-            <version>{project.version}</version>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.dobi</groupId>
             <artifactId>dobi-kafka-consumer</artifactId>
-            <version>{project.version}</version>
+            <version>${project.version}</version>
         </dependency>
     </dependencies>
+
     <build>
         <plugins>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
-                <version>{spring-boot.version}</version>
+                <version>${spring-boot.version}</version>
                 <executions>
                     <execution>
                         <id>repackage</id>

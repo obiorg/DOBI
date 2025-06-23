@@ -1,43 +1,36 @@
 package org.dobi.manager;
-
 import org.dobi.api.IDriver;
 import org.dobi.dto.TagData;
 import org.dobi.entities.Machine;
 import org.dobi.kafka.producer.KafkaProducerService;
-import org.dobi.ui.MachineStatusPanel;
-import java.awt.Color;
-
 public class MachineCollector implements Runnable {
     private final Machine machine;
     private final IDriver driver;
     private volatile boolean running = true;
     private final KafkaProducerService kafkaProducerService;
-    private final MachineStatusPanel statusPanel;
     private volatile String currentStatus = "Initialisation...";
-
-    public MachineCollector(Machine machine, IDriver driver, KafkaProducerService kps, MachineStatusPanel sp) {
+    private long tagsReadCount = 0;
+    public MachineCollector(Machine machine, IDriver driver, KafkaProducerService kps) {
         this.machine = machine;
         this.driver = driver;
         this.kafkaProducerService = kps;
-        this.statusPanel = sp;
     }
-
     @Override
     public void run() {
         driver.configure(machine);
         while (running) {
             try {
                 if (!driver.isConnected()) {
-                    updateStatus("Connexion...", Color.ORANGE);
+                    updateStatus("Connexion...");
                     if (driver.connect()) {
-                        updateStatus("Connecté", Color.GREEN);
+                        updateStatus("Connecté");
                     } else {
-                        updateStatus("Erreur Connexion", Color.RED);
+                        updateStatus("Erreur Connexion");
                         Thread.sleep(10000);
                         continue;
                     }
                 }
-                int tagsRead = 0;
+                int tagsInCycle = 0;
                 if (machine.getTags() != null && !machine.getTags().isEmpty()) {
                     for (org.dobi.entities.Tag tag : machine.getTags()) {
                         if (tag.isActive() && running) {
@@ -45,12 +38,13 @@ public class MachineCollector implements Runnable {
                            if (value != null) {
                                TagData tagData = new TagData(tag.getId(), tag.getName(), value, System.currentTimeMillis());
                                kafkaProducerService.sendTagData(tagData);
-                               tagsRead++;
+                               tagsInCycle++;
                            }
                         }
                     }
                 }
-                updateStatus("Connecté (lus: " + tagsRead + ")", Color.GREEN);
+                tagsReadCount += tagsInCycle;
+                updateStatus("Connecté (lus: " + tagsReadCount + ")");
                 Thread.sleep(5000);
             } catch (InterruptedException e) {
                 running = false;
@@ -58,15 +52,12 @@ public class MachineCollector implements Runnable {
             }
         }
         driver.disconnect();
-        updateStatus("Déconnecté", Color.DARK_GRAY);
+        updateStatus("Déconnecté");
     }
-    
     public void stop() { this.running = false; }
-
+    public long getMachineId() { return machine.getId(); }
+    public String getMachineName() { return machine.getName(); }
+    public long getTagsReadCount() { return tagsReadCount; }
     public String getCurrentStatus() { return currentStatus; }
-
-    private void updateStatus(String status, Color color) {
-        this.currentStatus = status;
-        statusPanel.updateMachineStatus(machine.getId(), status, color);
-    }
+    private void updateStatus(String status) { this.currentStatus = status; }
 }
