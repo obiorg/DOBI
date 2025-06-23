@@ -16,6 +16,9 @@ import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+// --- IMPORT STATIQUE AJOUTÉ ICI ---
+import static org.eclipse.milo.opcua.stack.core.types.builtin.unsigned.Unsigned.uint;
+
 public class OpcUaDriver implements IDriver {
 
     private Machine machine;
@@ -39,16 +42,13 @@ public class OpcUaDriver implements IDriver {
             
             System.out.println("[OPC-UA DEBUG] Tentative de découverte des endpoints sur: " + endpointUrl);
             
-            // Étape 1: Découvrir les points d'accès (endpoints)
             List<EndpointDescription> endpoints = DiscoveryClient.getEndpoints(endpointUrl).get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
             System.out.println("[OPC-UA DEBUG] " + endpoints.size() + " endpoint(s) trouvé(s).");
             
-            // Affiche tous les endpoints trouvés pour le diagnostic
             for(EndpointDescription e : endpoints) {
                 System.out.println("    -> Endpoint trouvé: " + e.getEndpointUrl() + " [Securité: " + e.getSecurityPolicyUri() + "]");
             }
 
-            // Étape 2: Choisir le point d'accès le moins sécurisé (pour les tests)
             EndpointDescription endpoint = endpoints.stream()
                 .filter(e -> e.getSecurityPolicyUri().equals(SecurityPolicy.None.getUri()))
                 .findFirst()
@@ -56,7 +56,6 @@ public class OpcUaDriver implements IDriver {
             
             System.out.println("[OPC-UA DEBUG] Endpoint choisi: " + endpoint.getEndpointUrl());
 
-            // Étape 3: Configurer le client
             OpcUaClientConfigBuilder configBuilder = OpcUaClientConfig.builder()
                 .setEndpoint(endpoint)
                 .setRequestTimeout(uint(TIMEOUT_SECONDS * 1000));
@@ -76,7 +75,7 @@ public class OpcUaDriver implements IDriver {
             return true;
         } catch (Exception e) {
             System.err.println("[OPC-UA DEBUG] Echec de la connexion pour " + machine.getName() + ": " + e.getMessage());
-            e.printStackTrace(); // Affiche la trace complète de l'erreur
+            e.printStackTrace();
             return false;
         }
     }

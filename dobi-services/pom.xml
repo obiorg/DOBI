@@ -18,7 +18,9 @@
         <module>dobi-machine-manager</module>
             <module>dobi-kafka-producer</module>
             <module>dobi-kafka-consumer</module>
+            <module>dobi-kafka-manager</module>
     </modules>
 </project>
+
 
 

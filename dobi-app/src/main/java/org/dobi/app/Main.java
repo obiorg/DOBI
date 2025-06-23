@@ -3,6 +3,7 @@ package org.dobi.app;
 import org.dobi.ui.MainFrame;
 import org.dobi.entities.Machine;
 import org.dobi.kafka.consumer.KafkaConsumerService;
+import org.dobi.kafka.manager.KafkaManagerService;
 import org.dobi.manager.MachineManagerService;
 import javax.swing.*;
 import java.awt.*;
@@ -18,6 +19,9 @@ public class Main {
     private static TrayIcon trayIcon;
 
     public static void main(String[] args) {
+        KafkaManagerService kafkaManager = new KafkaManagerService();
+        kafkaManager.checkStatus();
+
         SwingUtilities.invokeLater(Main::createAndShowGUI);
     }
 
@@ -68,7 +72,7 @@ public class Main {
             SystemTray.getSystemTray().add(trayIcon);
         } catch (AWTException e) { System.err.println("Impossible d'ajouter l'icone au SystemTray."); return; }
         
-        // 3. Démarrer les services
+        // 3. DÃ©marrer les services
         startServices(mainFrame.getStatusPanel());
         trayIcon.displayMessage("DOBI Service", "L'application a demarre avec succes.", TrayIcon.MessageType.INFO);
     }
@@ -76,7 +80,7 @@ public class Main {
     private static void startServices(MachineStatusPanel statusPanel) {
         new Thread(() -> {
             collectorService = new MachineManagerService(statusPanel);
-            collectorService.initializeKafka(); // Initialiser Kafka après avoir chargé les properties
+            collectorService.initializeKafka(); // Initialiser Kafka aprÃ¨s avoir chargÃ© les properties
             
             persistenceService = new KafkaConsumerService(
                 collectorService.getAppProperty("kafka.bootstrap.servers"), 
@@ -112,3 +116,4 @@ public class Main {
         return image.getScaledInstance(trayIconSize.width, trayIconSize.height, Image.SCALE_SMOOTH);
     }
 }
+
