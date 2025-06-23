@@ -72,15 +72,28 @@ public class Main {
             SystemTray.getSystemTray().add(trayIcon);
         } catch (AWTException e) { System.err.println("Impossible d'ajouter l'icone au SystemTray."); return; }
         
-        // 3. DÃ©marrer les services
+        // 3. DÃƒÂ©marrer les services
         startServices(mainFrame.getStatusPanel());
         trayIcon.displayMessage("DOBI Service", "L'application a demarre avec succes.", TrayIcon.MessageType.INFO);
+
+        // 4. Lier les actions des boutons de redémarrage
+        for (Machine machine : machines) {
+            JButton restartButton = mainFrame.getStatusPanel().getRestartButton(machine.getId());
+            if (restartButton != null) {
+                restartButton.addActionListener(e -> {
+                    // Le service doit être initialisé pour que ça marche
+                    if (collectorService != null) {
+                        collectorService.restartCollector(machine.getId());
+                    }
+                });
+            }
+        }
     }
     
     private static void startServices(MachineStatusPanel statusPanel) {
         new Thread(() -> {
             collectorService = new MachineManagerService(statusPanel);
-            collectorService.initializeKafka(); // Initialiser Kafka aprÃ¨s avoir chargÃ© les properties
+            collectorService.initializeKafka(); // Initialiser Kafka aprÃƒÂ¨s avoir chargÃƒÂ© les properties
             
             persistenceService = new KafkaConsumerService(
                 collectorService.getAppProperty("kafka.bootstrap.servers"), 
@@ -97,6 +110,19 @@ public class Main {
     private static void quitApplication() {
         new Thread(() -> {
             trayIcon.displayMessage("DOBI Service", "Arret de l'application en cours...", TrayIcon.MessageType.INFO);
+
+        // 4. Lier les actions des boutons de redémarrage
+        for (Machine machine : machines) {
+            JButton restartButton = mainFrame.getStatusPanel().getRestartButton(machine.getId());
+            if (restartButton != null) {
+                restartButton.addActionListener(e -> {
+                    // Le service doit être initialisé pour que ça marche
+                    if (collectorService != null) {
+                        collectorService.restartCollector(machine.getId());
+                    }
+                });
+            }
+        }
             if(collectorService != null) collectorService.stop();
             if(persistenceService != null) persistenceService.stop();
             System.out.println("Application DOBI arretee proprement.");
@@ -116,4 +142,5 @@ public class Main {
         return image.getScaledInstance(trayIconSize.width, trayIconSize.height, Image.SCALE_SMOOTH);
     }
 }
+
 

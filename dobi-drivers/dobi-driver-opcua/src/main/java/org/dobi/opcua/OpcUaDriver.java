@@ -29,16 +29,22 @@ public class OpcUaDriver implements IDriver {
 
     @Override
     public boolean connect() {
-        if (machine == null || machine.getAddress() == null) return false;
+        // Log de débogage ajouté AVANT toute opération réseau
+        System.out.println("[OPC-UA DEBUG pour " + machine.getName() + "] Entrée dans la méthode connect(). Le thread n'est pas bloqué.");
+
+        if (machine == null || machine.getAddress() == null) {
+            System.err.println("[OPC-UA DEBUG pour " + machine.getName() + "] Erreur: Configuration invalide (machine ou adresse null).");
+            return false;
+        }
 
         try {
             int port = machine.getPort() != null ? machine.getPort() : 4840;
             String endpointUrl = String.format("opc.tcp://%s:%d", machine.getAddress(), port);
             
-            System.out.println("[OPC-UA DEBUG] Tentative de découverte des endpoints sur: " + endpointUrl);
+            System.out.println("[OPC-UA DEBUG pour " + machine.getName() + "] Tentative de découverte des endpoints sur: " + endpointUrl);
             
             List<EndpointDescription> endpoints = DiscoveryClient.getEndpoints(endpointUrl).get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
-            System.out.println("[OPC-UA DEBUG] " + endpoints.size() + " endpoint(s) trouvé(s).");
+            System.out.println("[OPC-UA DEBUG pour " + machine.getName() + "] " + endpoints.size() + " endpoint(s) trouvé(s).");
             
             for(EndpointDescription e : endpoints) {
                 System.out.println("    -> Endpoint trouvé: " + e.getEndpointUrl() + " [Securité: " + e.getSecurityPolicyUri() + "]");
@@ -49,7 +55,7 @@ public class OpcUaDriver implements IDriver {
                 .findFirst()
                 .orElseThrow(() -> new Exception("Aucun endpoint de sécurité 'None' trouvé. Le serveur requiert une connexion sécurisée."));
             
-            System.out.println("[OPC-UA DEBUG] Endpoint choisi: " + endpoint.getEndpointUrl());
+            System.out.println("[OPC-UA DEBUG pour " + machine.getName() + "] Endpoint choisi: " + endpoint.getEndpointUrl());
 
             OpcUaClientConfigBuilder configBuilder = OpcUaClientConfig.builder()
                 .setEndpoint(endpoint)
@@ -57,12 +63,12 @@ public class OpcUaDriver implements IDriver {
 
             getIdentityProvider().ifPresent(configBuilder::setIdentityProvider);
 
-            System.out.println("[OPC-UA DEBUG] Création du client OPC UA...");
+            System.out.println("[OPC-UA DEBUG pour " + machine.getName() + "] Création du client OPC UA...");
             client = OpcUaClient.create(configBuilder.build());
             
-            System.out.println("[OPC-UA DEBUG] Connexion en cours...");
+            System.out.println("[OPC-UA DEBUG pour " + machine.getName() + "] Connexion en cours...");
             client.connect().get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
-            System.out.println("[OPC-UA DEBUG] Connexion réussie !");
+            System.out.println("[OPC-UA DEBUG pour " + machine.getName() + "] Connexion réussie !");
             
             return true;
         } catch (Exception e) {
@@ -75,10 +81,10 @@ public class OpcUaDriver implements IDriver {
         String username = machine.getOpcuaUser();
         String password = machine.getOpcuaPassword();
         if (username != null && !username.trim().isEmpty()) {
-            System.out.println("[OPC-UA DEBUG] Utilisation de l'authentification avec l'utilisateur: " + username);
+            System.out.println("[OPC-UA DEBUG pour " + machine.getName() + "] Utilisation de l'authentification avec l'utilisateur: " + username);
             return java.util.Optional.of(new UsernameProvider(username, password));
         } else {
-            System.out.println("[OPC-UA DEBUG] Utilisation d'une connexion anonyme.");
+            System.out.println("[OPC-UA DEBUG pour " + machine.getName() + "] Utilisation d'une connexion anonyme.");
             return java.util.Optional.empty();
         }
     }
