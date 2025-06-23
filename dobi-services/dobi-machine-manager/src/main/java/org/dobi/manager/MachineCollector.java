@@ -11,10 +11,9 @@ public class MachineCollector implements Runnable {
     private final Machine machine;
     private final IDriver driver;
     private volatile boolean running = true;
-    private volatile String currentStatus = "Initialisation...";
-    private volatile String currentStatus = "Initialisation...";
     private final KafkaProducerService kafkaProducerService;
     private final MachineStatusPanel statusPanel;
+    private volatile String currentStatus = "Initialisation...";
 
     public MachineCollector(Machine machine, IDriver driver, KafkaProducerService kps, MachineStatusPanel sp) {
         this.machine = machine;
@@ -31,7 +30,7 @@ public class MachineCollector implements Runnable {
                 if (!driver.isConnected()) {
                     updateStatus("Connexion...", Color.ORANGE);
                     if (driver.connect()) {
-                        updateStatus("Connecte", Color.GREEN);
+                        updateStatus("Connecté", Color.GREEN);
                     } else {
                         updateStatus("Erreur Connexion", Color.RED);
                         Thread.sleep(10000);
@@ -51,7 +50,7 @@ public class MachineCollector implements Runnable {
                         }
                     }
                 }
-                updateStatus("Connecte (lus: " + tagsRead + ")", Color.GREEN);
+                updateStatus("Connecté (lus: " + tagsRead + ")", Color.GREEN);
                 Thread.sleep(5000);
             } catch (InterruptedException e) {
                 running = false;
@@ -59,21 +58,15 @@ public class MachineCollector implements Runnable {
             }
         }
         driver.disconnect();
-        updateStatus("Deconnecte", Color.DARK_GRAY);
+        updateStatus("Déconnecté", Color.DARK_GRAY);
     }
+    
     public void stop() { this.running = false; }
+
     public String getCurrentStatus() { return currentStatus; }
 
     private void updateStatus(String status, Color color) {
         this.currentStatus = status;
         statusPanel.updateMachineStatus(machine.getId(), status, color);
     }
-    public String getCurrentStatus() { return currentStatus; }
-
-    private void updateStatus(String status, Color color) {
-        this.currentStatus = status;
-        updateStatus(status, color);
-    }
 }
-
-

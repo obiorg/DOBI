@@ -6,7 +6,7 @@ import jakarta.persistence.Persistence;
 import org.dobi.api.IDriver;
 import org.dobi.entities.Machine;
 import org.dobi.kafka.producer.KafkaProducerService;
-import org.dobi.ui.MachineStatusPanel; // Correction de l'import
+import org.dobi.ui.MachineStatusPanel;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.List;
@@ -29,10 +29,9 @@ public class MachineManagerService {
         this.emf = Persistence.createEntityManagerFactory("DOBI-PU");
         this.statusPanel = statusPanel;
         loadAppProperties();
-        loadDriverProperties(); // Chargement des drivers
+        loadDriverProperties();
     }
     
-    // Constructeur sans argument pour le premier chargement
     public MachineManagerService() {
          this.emf = Persistence.createEntityManagerFactory("DOBI-PU");
     }
@@ -55,41 +54,16 @@ public class MachineManagerService {
         try (InputStream input = getClass().getClassLoader().getResourceAsStream("drivers.properties")) {
             if (input == null) { System.err.println("ERREUR: Le fichier drivers.properties est introuvable !"); return; }
             driverProperties.load(input);
-            
-            // --- AJOUT DE LOG POUR LE DEBUG ---
-            System.out.println("--- Contenu de drivers.properties chargÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â© ---");
-            driverProperties.forEach((key, value) -> System.out.println("  -> ClÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â© lue: '" + key + "' | Classe: '" + value + "'"));
-            System.out.println("------------------------------------------");
-            
         } catch (Exception ex) { ex.printStackTrace(); }
     }
 
     private IDriver createDriverForMachine(Machine machine) {
-        if (machine.getDriver() == null || machine.getDriver().getDriver() == null) {
-            System.err.println("Driver non dÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©fini pour la machine " + machine.getName());
-            return null;
-        }
-
         String driverName = machine.getDriver().getDriver();
-        
-        // --- AJOUT DE LOG POUR LE DEBUG ---
-        System.out.println("Machine '" + machine.getName() + "': Recherche du driver pour la clÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©: '" + driverName + "'");
-        
         String driverClassName = driverProperties.getProperty(driverName);
-        if (driverClassName == null) { 
-            System.err.println("--> ECHEC: Aucune classe associÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©e au driver '" + driverName + "'"); 
-            return null; 
-        }
-        
-        System.out.println("--> SUCCES: Classe trouvÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©e: '" + driverClassName + "'");
-        
+        if (driverClassName == null) { System.err.println("Aucune classe associee au driver '" + driverName + "'"); return null; }
         try {
             return (IDriver) Class.forName(driverClassName).getConstructor().newInstance();
-        } catch (Exception e) { 
-            System.err.println("--> ERREUR: Erreur d'instanciation du driver '" + driverClassName + "'"); 
-            e.printStackTrace();
-            return null;
-        }
+        } catch (Exception e) { System.err.println("Erreur instanciation driver '" + driverClassName + "'"); return null; }
     }
     
     public void start() {
@@ -110,7 +84,7 @@ public class MachineManagerService {
     public List<Machine> getMachinesFromDb() {
         EntityManager em = emf.createEntityManager();
         try {
-            return em.createQuery(("SELECT m FROM Machine m JOIN FETCH m.driver JOIN FETCH m.company LEFT JOIN FETCH m.tags t LEFT JOIN FETCH t.type ty LEFT JOIN FETCH t.memory"), Machine.class).getResultList();
+            return em.createQuery("SELECT m FROM Machine m JOIN FETCH m.driver LEFT JOIN FETCH m.tags t LEFT JOIN FETCH t.type ty LEFT JOIN FETCH t.memory", Machine.class).getResultList();
         } finally { em.close(); }
     }
     
@@ -130,33 +104,25 @@ public class MachineManagerService {
         if (emf != null) emf.close();
         System.out.println("Machine Manager Service arrete.");
     }
-
-
+    
     public void restartCollector(long machineId) {
-        System.out.println("Demande de redÃƒÂ©marrage pour la machine ID: " + machineId);
-        
-        // ArrÃƒÂªter l'ancien collecteur s'il existe
+        System.out.println("Demande de redemarrage pour la machine ID: " + machineId);
         MachineCollector oldCollector = activeCollectors.get(machineId);
         if (oldCollector != null) {
             oldCollector.stop();
         }
-
-        // Retrouver l'objet Machine
         EntityManager em = emf.createEntityManager();
         Machine machineToRestart;
         try {
-            machineToRestart = em.createQuery(
-                "SELECT m FROM Machine m JOIN FETCH m.driver WHERE m.id = :id", Machine.class)
+            machineToRestart = em.createQuery("SELECT m FROM Machine m JOIN FETCH m.driver WHERE m.id = :id", Machine.class)
                 .setParameter("id", machineId)
                 .getSingleResult();
         } catch (Exception e) {
-            System.err.println("Impossible de retrouver la machine avec l'ID " + machineId + " pour la redÃƒÂ©marrer.");
+            System.err.println("Impossible de retrouver la machine avec l'ID " + machineId + " pour la redemarrer.");
             return;
         } finally {
             em.close();
         }
-        
-        // Lancer un nouveau collecteur
         IDriver driver = createDriverForMachine(machineToRestart);
         if (driver != null) {
             System.out.println(" -> Relance du collecteur pour la machine: " + machineToRestart.getName());
@@ -166,21 +132,9 @@ public class MachineManagerService {
         }
     }
 
-
-    public Map<Long, String> getMachineStatuses() {
-        Map<Long, String> statuses = new HashMap<>();
-        activeCollectors.forEach((id, collector) -> statuses.put(id, collector.getCurrentStatus()));
-        return statuses;
-    }
-
-
     public Map<Long, String> getMachineStatuses() {
         Map<Long, String> statuses = new HashMap<>();
         activeCollectors.forEach((id, collector) -> statuses.put(id, collector.getCurrentStatus()));
         return statuses;
     }
 }
-
-
-
-
