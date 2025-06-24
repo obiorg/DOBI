@@ -1,105 +1,58 @@
-package org.dobi.opcua;
+package org.dobi.app.service;
 
-import org.dobi.api.IDriver;
+import org.dobi.dto.MachineDetailDto;
+import org.dobi.dto.MachineStatusDto;
+import org.dobi.dto.TagDetailDto;
 import org.dobi.entities.Machine;
 import org.dobi.entities.Tag;
-import org.eclipse.milo.opcua.sdk.client.OpcUaClient;
-import org.eclipse.milo.opcua.sdk.client.api.config.OpcUaClientConfig;
-import org.eclipse.milo.opcua.sdk.client.api.config.OpcUaClientConfigBuilder;
-import org.eclipse.milo.opcua.sdk.client.api.identity.IdentityProvider;
-import org.eclipse.milo.opcua.sdk.client.api.identity.UsernameProvider;
-import org.eclipse.milo.opcua.stack.client.DiscoveryClient;
-import org.eclipse.milo.opcua.stack.core.security.SecurityPolicy;
-import org.eclipse.milo.opcua.stack.core.types.structured.EndpointDescription;
-import java.time.Duration;
+import org.dobi.manager.MachineManagerService;
+import org.springframework.stereotype.Service;
+import java.time.format.DateTimeFormatter;
+import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
-import static org.eclipse.milo.opcua.stack.core.types.builtin.unsigned.Unsigned.uint;
+import java.util.stream.Collectors;
 
-public class OpcUaDriver implements IDriver {
+@Service
+public class SupervisionService {
+    private final MachineManagerService machineManagerService;
+    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("HH:mm:ss");
 
-    private Machine machine;
-    private OpcUaClient client;
-    private static final int TIMEOUT_SECONDS = 10;
+    public SupervisionService(MachineManagerService machineManagerService) { this.machineManagerService = machineManagerService; }
+    public List<MachineStatusDto> getAllMachineStatuses() { return machineManagerService.getActiveCollectorDetails(); }
+    public void restartMachineCollector(Long id) { machineManagerService.restartCollector(id); }
 
-    @Override
-    public void configure(Machine machine) {
-        this.machine = machine;
+    public MachineDetailDto getMachineDetails(Long machineId) {
+        Machine machine = machineManagerService.getMachineFromDb(machineId);
+        if (machine == null) return null;
+        
+        String currentStatus = machineManagerService.getActiveCollectorDetails().stream()
+            .filter(s -> s.id() == machineId)
+            .map(MachineStatusDto::status)
+            .findFirst()
+            .orElse("Inconnu");
+        
+        List<TagDetailDto> tagDtos = (machine.getTags() != null) ? machine.getTags().stream()
+            .map(this::toTagDetailDto)
+            .collect(Collectors.toList()) : Collections.emptyList();
+        
+        return new MachineDetailDto(machine.getId(), machine.getName(), currentStatus, tagDtos);
     }
 
-    @Override
-    public boolean connect() {
-        // Log de débogage ajouté AVANT toute opération réseau
-        System.out.println("[OPC-UA DEBUG pour " + machine.getName() + "] Entrée dans la méthode connect(). Le thread n'est pas bloqué.");
-
-        if (machine == null || machine.getAddress() == null) {
-            System.err.println("[OPC-UA DEBUG pour " + machine.getName() + "] Erreur: Configuration invalide (machine ou adresse null).");
-            return false;
-        }
-
-        try {
-            int port = machine.getPort() != null ? machine.getPort() : 4840;
-            String endpointUrl = String.format("opc.tcp://%s:%d", machine.getAddress(), port);
-            
-            System.out.println("[OPC-UA DEBUG pour " + machine.getName() + "] Tentative de découverte des endpoints sur: " + endpointUrl);
-            
-            List<EndpointDescription> endpoints = DiscoveryClient.getEndpoints(endpointUrl).get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
-            System.out.println("[OPC-UA DEBUG pour " + machine.getName() + "] " + endpoints.size() + " endpoint(s) trouvé(s).");
-            
-            for(EndpointDescription e : endpoints) {
-                System.out.println("    -> Endpoint trouvé: " + e.getEndpointUrl() + " [Securité: " + e.getSecurityPolicyUri() + "]");
-            }
-
-            EndpointDescription endpoint = endpoints.stream()
-                .filter(e -> e.getSecurityPolicyUri().equals(SecurityPolicy.None.getUri()))
-                .findFirst()
-                .orElseThrow(() -> new Exception("Aucun endpoint de sécurité 'None' trouvé. Le serveur requiert une connexion sécurisée."));
-            
-            System.out.println("[OPC-UA DEBUG pour " + machine.getName() + "] Endpoint choisi: " + endpoint.getEndpointUrl());
-
-            OpcUaClientConfigBuilder configBuilder = OpcUaClientConfig.builder()
-                .setEndpoint(endpoint)
-                .setRequestTimeout(uint(TIMEOUT_SECONDS * 1000));
-
-            getIdentityProvider().ifPresent(configBuilder::setIdentityProvider);
-
-            System.out.println("[OPC-UA DEBUG pour " + machine.getName() + "] Création du client OPC UA...");
-            client = OpcUaClient.create(configBuilder.build());
-            
-            System.out.println("[OPC-UA DEBUG pour " + machine.getName() + "] Connexion en cours...");
-            client.connect().get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
-            System.out.println("[OPC-UA DEBUG pour " + machine.getName() + "] Connexion réussie !");
-            
-            return true;
-        } catch (Exception e) {
-            System.err.println("[OPC-UA DEBUG] Echec de la connexion pour " + machine.getName() + ": " + e.getClass().getSimpleName() + " -> " + e.getMessage());
-            return false;
-        }
+    private TagDetailDto toTagDetailDto(Tag tag) {
+        return new TagDetailDto(
+            tag.getId(),
+            tag.getName(),
+            getLiveValue(tag),
+            tag.getvStamp() != null ? tag.getvStamp().format(FORMATTER) : "N/A"
+        );
     }
 
-    private java.util.Optional<IdentityProvider> getIdentityProvider() {
-        String username = machine.getOpcuaUser();
-        String password = machine.getOpcuaPassword();
-        if (username != null && !username.trim().isEmpty()) {
-            System.out.println("[OPC-UA DEBUG pour " + machine.getName() + "] Utilisation de l'authentification avec l'utilisateur: " + username);
-            return java.util.Optional.of(new UsernameProvider(username, password));
-        } else {
-            System.out.println("[OPC-UA DEBUG pour " + machine.getName() + "] Utilisation d'une connexion anonyme.");
-            return java.util.Optional.empty();
-        }
+    private Object getLiveValue(Tag tag) {
+        if (tag.getvFloat() != null) return tag.getvFloat();
+        if (tag.getvInt() != null) return tag.getvInt();
+        if (tag.getvBool() != null) return tag.getvBool();
+        if (tag.getvStr() != null) return tag.getvStr();
+        if (tag.getvDateTime() != null) return tag.getvDateTime();
+        return "N/A";
     }
-
-    @Override
-    public void disconnect() { if (client != null) client.disconnect(); }
-
-    @Override
-    public boolean isConnected() {
-        return client != null && client.getSession().isDone() && !client.getSession().isCompletedExceptionally();
-    }
-
-    @Override
-    public Object read(Tag tag) { /* TODO */ return null; }
-
-    @Override
-    public void write(Tag tag, Object value) { /* TODO */ }
 }
