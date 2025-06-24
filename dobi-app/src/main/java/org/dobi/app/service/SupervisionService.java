@@ -4,8 +4,8 @@ import org.dobi.dto.MachineDetailDto;
 import org.dobi.dto.MachineStatusDto;
 import org.dobi.dto.TagDetailDto;
 import org.dobi.dto.HistoryDataPointDto;
-import org.dobi.entities.PersStandard;
 import org.dobi.entities.Machine;
+import org.dobi.entities.PersStandard;
 import org.dobi.entities.Tag;
 import org.dobi.manager.MachineManagerService;
 import org.springframework.stereotype.Service;
@@ -17,7 +17,8 @@ import java.util.stream.Collectors;
 @Service
 public class SupervisionService {
     private final MachineManagerService machineManagerService;
-    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("HH:mm:ss");
+    private static final DateTimeFormatter HISTORY_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    private static final DateTimeFormatter LIVE_FORMATTER = DateTimeFormatter.ofPattern("HH:mm:ss");
 
     public SupervisionService(MachineManagerService machineManagerService) { this.machineManagerService = machineManagerService; }
     public List<MachineStatusDto> getAllMachineStatuses() { return machineManagerService.getActiveCollectorDetails(); }
@@ -45,7 +46,7 @@ public class SupervisionService {
             tag.getId(),
             tag.getName(),
             getLiveValue(tag),
-            tag.getvStamp() != null ? tag.getvStamp().format(FORMATTER) : "N/A"
+            tag.getvStamp() != null ? tag.getvStamp().format(LIVE_FORMATTER) : "N/A"
         );
     }
 
@@ -57,18 +58,18 @@ public class SupervisionService {
         if (tag.getvDateTime() != null) return tag.getvDateTime();
         return "N/A";
     }
-
-
+    
     public List<HistoryDataPointDto> getTagHistory(Long tagId) {
         List<PersStandard> history = machineManagerService.getTagHistory(tagId);
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
         return history.stream()
-            .map(h -> new HistoryDataPointDto(
-                h.getvStamp().format(formatter),
-                getHistoryValue(h)
-            ))
-            .collect(java.util.stream.Collectors.toList());
+            .map(h -> {
+                // CORRECTION: On vérifie si vStamp n'est pas null avant de le formater.
+                String timestamp = (h.getvStamp() != null) ? h.getvStamp().format(HISTORY_FORMATTER) : "Date Inconnue";
+                Object value = getHistoryValue(h);
+                return new HistoryDataPointDto(timestamp, value);
+            })
+            .collect(Collectors.toList());
     }
     
     private Object getHistoryValue(PersStandard history) {
@@ -80,4 +81,3 @@ public class SupervisionService {
         return "N/A";
     }
 }
-

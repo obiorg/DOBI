@@ -2,6 +2,8 @@ package org.dobi.kafka.manager;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.List;
 
 public class KafkaManagerService {
 
@@ -12,33 +14,45 @@ public class KafkaManagerService {
     public void checkStatus() {
         System.out.println("Vérification du statut de Kafka et Zookeeper...");
         
-        // Cette approche est dépendante de l'OS (Windows dans ce cas)
-        // Elle cherche si un processus Java contient "zookeeper" ou "kafka" dans son nom.
-        boolean isZookeeperRunning = isProcessRunning("zookeeper");
-        boolean isKafkaRunning = isProcessRunning("kafka");
+        List<String> runningProcesses = getRunningJavaProcesses();
+
+        boolean isZookeeperRunning = isProcessInList(runningProcesses, "zookeeper");
+        boolean isKafkaRunning = isProcessInList(runningProcesses, "kafka");
 
         System.out.println("  -> Statut Zookeeper: " + (isZookeeperRunning ? "Démarré" : "Arrêté"));
         System.out.println("  -> Statut Kafka: " + (isKafkaRunning ? "Démarré" : "Arrêté"));
     }
     
     /**
-     * Méthode simple pour vérifier si un processus contenant le mot-clé est en cours.
-     * Note: Ceci est une implémentation basique pour Windows.
+     * Exécute la commande 'jps -l' et retourne une liste des processus Java en cours.
      */
-    private boolean isProcessRunning(String processName) {
+    private List<String> getRunningJavaProcesses() {
+        List<String> processes = new ArrayList<>();
         try {
+            // 'jps -l' liste les processus Java avec le nom complet du jar ou de la classe main.
             Process process = Runtime.getRuntime().exec("jps -l");
             BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
             String line;
             while ((line = reader.readLine()) != null) {
-                if (line.toLowerCase().contains(processName.toLowerCase())) {
-                    return true;
-                }
+                processes.add(line.toLowerCase());
             }
-            return false;
+            process.waitFor();
         } catch (Exception e) {
-            System.err.println("Impossible de vérifier les processus Java en cours: " + e.getMessage());
-            return false;
+            System.err.println("Impossible de vérifier les processus Java en cours. Assurez-vous que le JDK est dans le PATH. Erreur: " + e.getMessage());
         }
+        return processes;
+    }
+
+    /**
+     * Vérifie si un mot-clé est présent dans la liste des processus.
+     */
+    private boolean isProcessInList(List<String> processList, String keyword) {
+        for (String process : processList) {
+            // On cherche si la ligne contient, par exemple, 'zookeeper' ou 'kafka.Kafka'
+            if (process.contains(keyword.toLowerCase())) {
+                return true;
+            }
+        }
+        return false;
     }
 }
