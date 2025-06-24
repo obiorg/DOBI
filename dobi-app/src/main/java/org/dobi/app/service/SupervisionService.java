@@ -1,8 +1,8 @@
 package org.dobi.app.service;
 
-import org.dobi.app.dto.MachineDetailDto;
-import org.dobi.app.dto.TagDetailDto;
+import org.dobi.dto.MachineDetailDto;
 import org.dobi.dto.MachineStatusDto;
+import org.dobi.dto.TagDetailDto;
 import org.dobi.entities.Machine;
 import org.dobi.entities.Tag;
 import org.dobi.manager.MachineManagerService;
@@ -15,6 +15,8 @@ import java.util.stream.Collectors;
 @Service
 public class SupervisionService {
     private final MachineManagerService machineManagerService;
+    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("HH:mm:ss");
+
     public SupervisionService(MachineManagerService machineManagerService) { this.machineManagerService = machineManagerService; }
     public List<MachineStatusDto> getAllMachineStatuses() { return machineManagerService.getActiveCollectorDetails(); }
     public void restartMachineCollector(Long id) { machineManagerService.restartCollector(id); }
@@ -23,22 +25,26 @@ public class SupervisionService {
         Machine machine = machineManagerService.getMachineFromDb(machineId);
         if (machine == null) return null;
         
-        MachineStatusDto statusDto = machineManagerService.getActiveCollectorDetails().stream()
-            .filter(s -> s.id() == machineId).findFirst().orElse(null);
+        String currentStatus = machineManagerService.getActiveCollectorDetails().stream()
+            .filter(s -> s.id() == machineId)
+            .map(MachineStatusDto::status)
+            .findFirst()
+            .orElse("Inconnu");
         
-        String currentStatus = (statusDto != null) ? statusDto.status() : "Inconnu";
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss");
-
         List<TagDetailDto> tagDtos = (machine.getTags() != null) ? machine.getTags().stream()
-            .map(tag -> new TagDetailDto(
-                tag.getId(),
-                tag.getName(),
-                getLiveValue(tag),
-                tag.getvStamp() != null ? tag.getvStamp().format(formatter) : "N/A"
-            ))
+            .map(this::toTagDetailDto)
             .collect(Collectors.toList()) : Collections.emptyList();
         
         return new MachineDetailDto(machine.getId(), machine.getName(), currentStatus, tagDtos);
+    }
+
+    private TagDetailDto toTagDetailDto(Tag tag) {
+        return new TagDetailDto(
+            tag.getId(),
+            tag.getName(),
+            getLiveValue(tag),
+            tag.getvStamp() != null ? tag.getvStamp().format(FORMATTER) : "N/A"
+        );
     }
 
     private Object getLiveValue(Tag tag) {

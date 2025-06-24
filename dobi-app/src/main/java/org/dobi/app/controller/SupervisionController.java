@@ -1,7 +1,7 @@
 package org.dobi.app.controller;
 
-import org.dobi.app.dto.MachineDetailDto;
-import org.dobi.app.dto.MachineStatusDto;
+import org.dobi.dto.MachineDetailDto;
+import org.dobi.dto.MachineStatusDto;
 import org.dobi.app.service.SupervisionService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
