@@ -3,6 +3,8 @@ package org.dobi.app.service;
 import org.dobi.dto.MachineDetailDto;
 import org.dobi.dto.MachineStatusDto;
 import org.dobi.dto.TagDetailDto;
+import org.dobi.dto.HistoryDataPointDto;
+import org.dobi.entities.PersStandard;
 import org.dobi.entities.Machine;
 import org.dobi.entities.Tag;
 import org.dobi.manager.MachineManagerService;
@@ -55,4 +57,27 @@ public class SupervisionService {
         if (tag.getvDateTime() != null) return tag.getvDateTime();
         return "N/A";
     }
+
+
+    public List<HistoryDataPointDto> getTagHistory(Long tagId) {
+        List<PersStandard> history = machineManagerService.getTagHistory(tagId);
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+        return history.stream()
+            .map(h -> new HistoryDataPointDto(
+                h.getvStamp().format(formatter),
+                getHistoryValue(h)
+            ))
+            .collect(java.util.stream.Collectors.toList());
+    }
+    
+    private Object getHistoryValue(PersStandard history) {
+        if (history.getvFloat() != null) return history.getvFloat();
+        if (history.getvInt() != null) return history.getvInt();
+        if (history.getvBool() != null) return history.getvBool();
+        if (history.getvStr() != null) return history.getvStr();
+        if (history.getvDateTime() != null) return history.getvDateTime();
+        return "N/A";
+    }
 }
+

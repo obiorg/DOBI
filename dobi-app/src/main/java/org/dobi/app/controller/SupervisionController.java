@@ -35,4 +35,10 @@ public class SupervisionController {
             return ResponseEntity.notFound().build();
         }
     }
+
+    @GetMapping("/tags/{id}/history")
+    public List<org.dobi.dto.HistoryDataPointDto> getTagHistory(@PathVariable Long id) {
+        return supervisionService.getTagHistory(id);
+    }
 }
+

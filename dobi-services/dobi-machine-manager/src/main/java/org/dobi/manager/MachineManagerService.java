@@ -62,11 +62,11 @@ public class MachineManagerService {
         }
     }
     
-    // --- MÉTHODE AJOUTÉE ---
+    // --- MÃ‰THODE AJOUTÃ‰E ---
     public Machine getMachineFromDb(long machineId) {
         EntityManager em = emf.createEntityManager();
         try {
-            // Requête pour charger une seule machine avec tous ses tags et associations
+            // RequÃªte pour charger une seule machine avec tous ses tags et associations
             return em.createQuery(
                 "SELECT m FROM Machine m LEFT JOIN FETCH m.tags t LEFT JOIN FETCH t.type ty LEFT JOIN FETCH t.memory WHERE m.id = :id", Machine.class)
                 .setParameter("id", machineId)
@@ -122,4 +122,20 @@ public class MachineManagerService {
             .map(c -> new MachineStatusDto(c.getMachineId(), c.getMachineName(), c.getCurrentStatus(), c.getTagsReadCount()))
             .collect(Collectors.toList());
     }
+
+    public List<org.dobi.entities.PersStandard> getTagHistory(long tagId) {
+        EntityManager em = emf.createEntityManager();
+        try {
+            return em.createQuery(
+                "SELECT h FROM PersStandard h WHERE h.tag = :tagId", org.dobi.entities.PersStandard.class)
+                .setParameter("tagId", tagId)
+                .getResultList();
+        } catch (Exception e) {
+            System.err.println("Impossible de récupérer l'historique pour le tag ID: " + tagId);
+            return java.util.Collections.emptyList();
+        } finally {
+            em.close();
+        }
+    }
 }
+
