@@ -11,9 +11,7 @@ public class MachineCollector implements Runnable {
     private volatile String currentStatus = "Initialisation...";
     private long tagsReadCount = 0;
     public MachineCollector(Machine machine, IDriver driver, KafkaProducerService kps) {
-        this.machine = machine;
-        this.driver = driver;
-        this.kafkaProducerService = kps;
+        this.machine = machine; this.driver = driver; this.kafkaProducerService = kps;
     }
     @Override
     public void run() {
@@ -22,13 +20,8 @@ public class MachineCollector implements Runnable {
             try {
                 if (!driver.isConnected()) {
                     updateStatus("Connexion...");
-                    if (driver.connect()) {
-                        updateStatus("Connecté");
-                    } else {
-                        updateStatus("Erreur Connexion");
-                        Thread.sleep(10000);
-                        continue;
-                    }
+                    if (driver.connect()) { updateStatus("Connecté"); }
+                    else { updateStatus("Erreur Connexion"); Thread.sleep(10000); continue; }
                 }
                 int tagsInCycle = 0;
                 if (machine.getTags() != null && !machine.getTags().isEmpty()) {
@@ -46,10 +39,7 @@ public class MachineCollector implements Runnable {
                 tagsReadCount += tagsInCycle;
                 updateStatus("Connecté (lus: " + tagsReadCount + ")");
                 Thread.sleep(5000);
-            } catch (InterruptedException e) {
-                running = false;
-                Thread.currentThread().interrupt();
-            }
+            } catch (InterruptedException e) { running = false; Thread.currentThread().interrupt(); }
         }
         driver.disconnect();
         updateStatus("Déconnecté");
