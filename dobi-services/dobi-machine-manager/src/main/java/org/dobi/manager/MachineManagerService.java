@@ -138,19 +138,19 @@ public class MachineManagerService {
         }
     }
 
-    public org.dobi.entities.Machine getMachineFromDb(long machineId) {
-        EntityManager em = emf.createEntityManager();
-        try {
-            return em.createQuery(
-                "SELECT m FROM Machine m LEFT JOIN FETCH m.tags t WHERE m.id = :id", org.dobi.entities.Machine.class)
-                .setParameter("id", machineId)
-                .getSingleResult();
-        } catch (Exception e) {
-            return null;
-        } finally {
-            em.close();
-        }
-    }
+//    public org.dobi.entities.Machine getMachineFromDb(long machineId) {
+//        EntityManager em = emf.createEntityManager();
+//        try {
+//            return em.createQuery(
+//                "SELECT m FROM Machine m LEFT JOIN FETCH m.tags t WHERE m.id = :id", org.dobi.entities.Machine.class)
+//                .setParameter("id", machineId)
+//                .getSingleResult();
+//        } catch (Exception e) {
+//            return null;
+//        } finally {
+//            em.close();
+//        }
+//    }
 
     public org.dobi.entities.Tag getTagFromDb(long tagId) {
         EntityManager em = emf.createEntityManager();
