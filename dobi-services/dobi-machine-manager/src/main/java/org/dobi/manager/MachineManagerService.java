@@ -4,10 +4,9 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.Persistence;
 import org.dobi.api.IDriver;
-import org.dobi.dto.MachineStatusDto; // Utilise le DTO depuis dobi-core
+import org.dobi.dto.MachineStatusDto;
 import org.dobi.entities.Machine;
 import org.dobi.kafka.producer.KafkaProducerService;
-
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.List;
@@ -31,15 +30,15 @@ public class MachineManagerService {
         loadAppProperties();
         loadDriverProperties();
     }
-    
+
     public void initializeKafka() {
         this.kafkaProducerService = new KafkaProducerService(appProperties.getProperty("kafka.bootstrap.servers"), appProperties.getProperty("kafka.topic.tags.data"));
     }
-    
+
     private void loadAppProperties() { try (InputStream input = getClass().getClassLoader().getResourceAsStream("application.properties")) { if (input == null) { System.err.println("ATTENTION: application.properties introuvable!"); return; } appProperties.load(input); } catch (Exception ex) { ex.printStackTrace(); } }
     private void loadDriverProperties() { try (InputStream input = getClass().getClassLoader().getResourceAsStream("drivers.properties")) { if (input == null) { System.err.println("ERREUR: drivers.properties introuvable!"); return; } driverProperties.load(input); } catch (Exception ex) { ex.printStackTrace(); } }
-    private IDriver createDriverForMachine(Machine machine) { String driverName = machine.getDriver().getDriver(); String driverClassName = driverProperties.getProperty(driverName); if (driverClassName == null) { System.err.println("Aucune classe pour driver '" + driverName + "'"); return null; } try { return (IDriver) Class.forName(driverClassName).getConstructor().newInstance(); } catch (Exception e) { System.err.println("Erreur instanciation driver '" + driverClassName + "'"); return null; } }
-    
+    private IDriver createDriverForMachine(Machine machine) { String driverName = machine.getDriver().getDriver(); String driverClassName = driverProperties.getProperty(driverName); if (driverClassName == null) { System.err.println("Aucune classe pour driver '" + driverName + "'"); return null; } try { return (IDriver) Class.forName(driverClassName).getConstructor().newInstance(); } catch (Exception e) { System.err.println("Erreur instanciation driver '" + driverClassName + "'"); e.printStackTrace(); return null; } }
+
     public void start() {
         List<Machine> machines = getMachinesFromDb();
         executorService = Executors.newFixedThreadPool(Math.max(1, machines.size()));
@@ -53,7 +52,7 @@ public class MachineManagerService {
         }
     }
 
-    public List<Machine> getMachinesFromDb() { 
+    public List<Machine> getMachinesFromDb() {
         EntityManager em = emf.createEntityManager();
         try {
             return em.createQuery("SELECT m FROM Machine m JOIN FETCH m.driver", Machine.class).getResultList();
@@ -62,11 +61,9 @@ public class MachineManagerService {
         }
     }
     
-    // --- MÃƒÆ’Ã¢â‚¬Â°THODE AJOUTÃƒÆ’Ã¢â‚¬Â°E ---
     public Machine getMachineFromDb(long machineId) {
         EntityManager em = emf.createEntityManager();
         try {
-            // RequÃƒÆ’Ã‚Âªte pour charger une seule machine avec tous ses tags et associations
             return em.createQuery(
                 "SELECT m FROM Machine m LEFT JOIN FETCH m.tags t LEFT JOIN FETCH t.type ty LEFT JOIN FETCH t.memory WHERE m.id = :id", Machine.class)
                 .setParameter("id", machineId)
@@ -79,10 +76,41 @@ public class MachineManagerService {
         }
     }
 
+    // --- MÉTHODE AJOUTÉE ---
+    public org.dobi.entities.Tag getTagFromDb(long tagId) {
+        EntityManager em = emf.createEntityManager();
+        try {
+            // Utilise find qui est optimisé pour récupérer un objet par sa clé primaire.
+            return em.find(org.dobi.entities.Tag.class, tagId);
+        } catch (Exception e) {
+            System.err.println("Impossible de trouver le tag avec l'ID: " + tagId);
+            return null;
+        } finally {
+            em.close();
+        }
+    }
+
+    public List<org.dobi.entities.PersStandard> getTagHistory(long tagId, int page, int size) {
+        EntityManager em = emf.createEntityManager();
+        try {
+            return em.createQuery(
+                "SELECT h FROM PersStandard h WHERE h.tag = :tagId ORDER BY h.vStamp DESC", org.dobi.entities.PersStandard.class)
+                .setParameter("tagId", tagId)
+                .setFirstResult(page * size)
+                .setMaxResults(size)
+                .getResultList();
+        } catch (Exception e) {
+            System.err.println("Impossible de récupérer l'historique pour le tag ID: " + tagId);
+            return java.util.Collections.emptyList();
+        } finally {
+            em.close();
+        }
+    }
+
     public EntityManagerFactory getEmf() { return emf; }
     public String getAppProperty(String key) { return appProperties.getProperty(key); }
-    
-    public void stop() { 
+
+    public void stop() {
         if (kafkaProducerService != null) kafkaProducerService.close();
         if (executorService != null) {
             activeCollectors.values().forEach(MachineCollector::stop);
@@ -95,11 +123,10 @@ public class MachineManagerService {
         }
         if (emf != null) emf.close();
     }
-    
+
     public void restartCollector(long machineId) {
         MachineCollector oldCollector = activeCollectors.get(machineId);
         if (oldCollector != null) oldCollector.stop();
-        
         EntityManager em = emf.createEntityManager();
         try {
             Machine machineToRestart = em.createQuery("SELECT m FROM Machine m JOIN FETCH m.driver WHERE m.id = :id", Machine.class)
@@ -122,53 +149,4 @@ public class MachineManagerService {
             .map(c -> new MachineStatusDto(c.getMachineId(), c.getMachineName(), c.getCurrentStatus(), c.getTagsReadCount()))
             .collect(Collectors.toList());
     }
-
-        public List<org.dobi.entities.PersStandard> getTagHistory(long tagId, int page, int size) {
-        EntityManager em = emf.createEntityManager();
-        try {
-            return em.createQuery(
-                "SELECT h FROM PersStandard h WHERE h.tag = :tagId ORDER BY h.vStamp DESC", org.dobi.entities.PersStandard.class)
-                .setParameter("tagId", tagId)
-                .setFirstResult(page * size)
-                .setMaxResults(size)
-                .getResultList();
-        } catch (Exception e) {
-            System.err.println("Impossible de récupérer l'historique pour le tag ID: " + tagId);
-            return java.util.Collections.emptyList();
-        } finally {
-            em.close();
-        }
-    } catch (Exception e) {
-            System.err.println("Impossible de rÃƒÂ©cupÃƒÂ©rer l'historique pour le tag ID: " + tagId);
-            return java.util.Collections.emptyList();
-        } finally {
-            em.close();
-        }
-    }
-
-//    public org.dobi.entities.Machine getMachineFromDb(long machineId) {
-//        EntityManager em = emf.createEntityManager();
-//        try {
-//            return em.createQuery(
-//                "SELECT m FROM Machine m LEFT JOIN FETCH m.tags t WHERE m.id = :id", org.dobi.entities.Machine.class)
-//                .setParameter("id", machineId)
-//                .getSingleResult();
-//        } catch (Exception e) {
-//            return null;
-//        } finally {
-//            em.close();
-//        }
-//    }
-
-    public org.dobi.entities.Tag getTagFromDb(long tagId) {
-        EntityManager em = emf.createEntityManager();
-        try {
-            return em.find(org.dobi.entities.Tag.class, tagId);
-        } finally {
-            em.close();
-        }
-    }
 }
-
-
-

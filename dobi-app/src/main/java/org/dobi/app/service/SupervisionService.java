@@ -27,34 +27,20 @@ public class SupervisionService {
     public MachineDetailDto getMachineDetails(Long machineId) {
         Machine machine = machineManagerService.getMachineFromDb(machineId);
         if (machine == null) return null;
-        
         String currentStatus = machineManagerService.getActiveCollectorDetails().stream()
-            .filter(s -> s.id() == machineId)
-            .map(MachineStatusDto::status)
-            .findFirst()
-            .orElse("Inconnu");
-        
+            .filter(s -> s.id() == machineId).map(MachineStatusDto::status).findFirst().orElse("Inconnu");
         List<TagDetailDto> tagDtos = (machine.getTags() != null) ? machine.getTags().stream()
-            .map(this::toTagDetailDto)
-            .collect(Collectors.toList()) : Collections.emptyList();
-        
+            .map(this::toTagDetailDto).collect(Collectors.toList()) : Collections.emptyList();
         return new MachineDetailDto(machine.getId(), machine.getName(), currentStatus, tagDtos);
     }
-
     public TagDetailDto getTagDetails(Long tagId) {
         Tag tag = machineManagerService.getTagFromDb(tagId);
         return (tag != null) ? toTagDetailDto(tag) : null;
     }
-
     private TagDetailDto toTagDetailDto(Tag tag) {
-        return new TagDetailDto(
-            tag.getId(),
-            tag.getName(),
-            getLiveValue(tag),
-            tag.getvStamp() != null ? tag.getvStamp().format(LIVE_FORMATTER) : "N/A"
-        );
+        return new TagDetailDto(tag.getId(), tag.getName(), getLiveValue(tag),
+            tag.getvStamp() != null ? tag.getvStamp().format(LIVE_FORMATTER) : "N/A");
     }
-
     private Object getLiveValue(Tag tag) {
         if (tag == null) return "N/A";
         if (tag.getvFloat() != null) return tag.getvFloat();
@@ -64,26 +50,21 @@ public class SupervisionService {
         if (tag.getvDateTime() != null) return tag.getvDateTime();
         return "N/A";
     }
-    
     public List<HistoryDataPointDto> getTagHistory(Long tagId, int page, int size) {
         List<PersStandard> history = machineManagerService.getTagHistory(tagId, page, size);
-        return history.stream()
-            .map(h -> {
+        return history.stream().map(h -> {
                 String timestamp = (h.getvStamp() != null) ? h.getvStamp().format(HISTORY_FORMATTER) : "Date Inconnue";
                 Object value = getHistoryValue(h);
                 return new HistoryDataPointDto(timestamp, value);
-            })
-            .collect(Collectors.toList());
+            }).collect(Collectors.toList());
     }
-    
-    private Object getHistoryValue(PersStandard history) {
-        if (history == null) return "N/A";
-        if (history.getvFloat() != null) return history.getvFloat();
-        if (history.getvInt() != null) return history.getvInt();
-        if (history.getvBool() != null) return history.getvBool();
-        if (history.getvStr() != null) return history.getvStr();
-        if (history.getvDateTime() != null) return history.getvDateTime();
+    private Object getHistoryValue(PersStandard h) {
+        if (h == null) return "N/A";
+        if (h.getvFloat() != null) return h.getvFloat();
+        if (h.getvInt() != null) return h.getvInt();
+        if (h.getvBool() != null) return h.getvBool();
+        if (h.getvStr() != null) return h.getvStr();
+        if (h.getvDateTime() != null) return h.getvDateTime();
         return "N/A";
     }
 }
-
