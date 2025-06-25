@@ -22,7 +22,7 @@ public class Machine extends BaseEntity {
     private Integer slot;
     private Integer bus;
 
-    // --- Champs OPC UA ajoutés ---
+    // --- Champs OPC UA ajoutÃ©s ---
     @Column(name = "opcua_security_policy")
     private String opcuaSecurityPolicy;
     @Column(name = "opcua_user")
@@ -33,6 +33,8 @@ public class Machine extends BaseEntity {
     private String opcuaKeystorePath;
     @Column(name = "opcua_keystore_password")
     private String opcuaKeystorePassword;
+
+    @Column(name = "hostname") private String hostname;
     // --- Fin des champs OPC UA ---
 
     @Column(name = "mqtt_user")
@@ -86,4 +88,9 @@ public class Machine extends BaseEntity {
     public void setOpcuaKeystorePath(String opcuaKeystorePath) { this.opcuaKeystorePath = opcuaKeystorePath; }
     public String getOpcuaKeystorePassword() { return opcuaKeystorePassword; }
     public void setOpcuaKeystorePassword(String opcuaKeystorePassword) { this.opcuaKeystorePassword = opcuaKeystorePassword; }
+
+
+    public String getHostname() { return hostname; }
+    public void setHostname(String hostname) { this.hostname = hostname; }
 }
+
