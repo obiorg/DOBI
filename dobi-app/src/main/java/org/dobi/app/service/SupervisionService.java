@@ -27,10 +27,13 @@ public class SupervisionService {
     public MachineDetailDto getMachineDetails(Long machineId) {
         Machine machine = machineManagerService.getMachineFromDb(machineId);
         if (machine == null) return null;
+        
         String currentStatus = machineManagerService.getActiveCollectorDetails().stream()
             .filter(s -> s.id() == machineId).map(MachineStatusDto::status).findFirst().orElse("Inconnu");
+        
         List<TagDetailDto> tagDtos = (machine.getTags() != null) ? machine.getTags().stream()
             .map(this::toTagDetailDto).collect(Collectors.toList()) : Collections.emptyList();
+        
         return new MachineDetailDto(machine.getId(), machine.getName(), currentStatus, tagDtos);
     }
     public TagDetailDto getTagDetails(Long tagId) {

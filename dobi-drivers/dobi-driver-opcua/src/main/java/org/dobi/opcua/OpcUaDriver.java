@@ -10,9 +10,10 @@ import org.eclipse.milo.opcua.sdk.client.api.identity.IdentityProvider;
 import org.eclipse.milo.opcua.sdk.client.api.identity.UsernameProvider;
 import org.eclipse.milo.opcua.stack.client.DiscoveryClient;
 import org.eclipse.milo.opcua.stack.core.security.SecurityPolicy;
+import org.eclipse.milo.opcua.stack.core.types.builtin.DataValue;
+import org.eclipse.milo.opcua.stack.core.types.builtin.NodeId;
 import org.eclipse.milo.opcua.stack.core.types.structured.EndpointDescription;
-import org.eclipse.milo.opcua.stack.core.util.EndpointUtil; // Import ajouté
-
+import org.eclipse.milo.opcua.stack.core.util.EndpointUtil;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -21,47 +22,28 @@ public class OpcUaDriver implements IDriver {
 
     private Machine machine;
     private OpcUaClient client;
-    private static final int TIMEOUT_SECONDS = 10;
 
     @Override
-    public void configure(Machine machine) {
-        this.machine = machine;
-    }
+    public void configure(Machine machine) { this.machine = machine; }
 
     @Override
     public boolean connect() {
         if (machine == null || machine.getAddress() == null) return false;
-
         try {
             int port = machine.getPort() != null ? machine.getPort() : 4840;
-            String discoveryUrl = String.format("opc.tcp://%s:%d", machine.getAddress(), port);
-            
-            System.out.println("[OPC-UA] Tentative de découverte des endpoints sur: " + discoveryUrl);
-            
-            List<EndpointDescription> endpoints = DiscoveryClient.getEndpoints(discoveryUrl).get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
-
-            EndpointDescription originalEndpoint = endpoints.stream()
+            String endpointUrl = String.format("opc.tcp://%s:%d", machine.getAddress(), port);
+            List<EndpointDescription> endpoints = DiscoveryClient.getEndpoints(endpointUrl).get(10, TimeUnit.SECONDS);
+            EndpointDescription endpoint = endpoints.stream()
                 .filter(e -> e.getSecurityPolicyUri().equals(SecurityPolicy.None.getUri()))
-                .findFirst()
-                .orElseThrow(() -> new Exception("Aucun endpoint de sécurité 'None' trouvé."));
-            
-            // CORRECTION: Forcer l'utilisation de l'adresse IP pour éviter la résolution DNS inversée
-            EndpointDescription endpoint = EndpointUtil.updateUrl(originalEndpoint, machine.getAddress(), port);
-            System.out.println("[OPC-UA] Endpoint choisi et forcé sur IP: " + endpoint.getEndpointUrl());
-
-            OpcUaClientConfigBuilder cfg = OpcUaClientConfig.builder()
-                .setEndpoint(endpoint)
-                .setRequestTimeout(org.eclipse.milo.opcua.stack.core.types.builtin.unsigned.Unsigned.uint(TIMEOUT_SECONDS * 1000));
-
+                .findFirst().orElseThrow(() -> new Exception("Aucun endpoint de sécurité 'None' trouvé."));
+            EndpointDescription updatedEndpoint = EndpointUtil.updateUrl(endpoint, machine.getAddress(), port);
+            OpcUaClientConfigBuilder cfg = OpcUaClientConfig.builder().setEndpoint(updatedEndpoint);
             getIdentityProvider().ifPresent(cfg::setIdentityProvider);
-            
             client = OpcUaClient.create(cfg.build());
-            client.connect().get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
-            System.out.println("[OPC-UA] Connexion réussie !");
-            
+            client.connect().get(10, TimeUnit.SECONDS);
             return true;
         } catch (Exception e) {
-            System.err.println("[OPC-UA] Echec de la connexion pour " + machine.getName() + ": " + e.getClass().getSimpleName() + " -> " + e.getMessage());
+            System.err.println("Erreur de connexion OPC UA à " + machine.getName() + ": " + e.getMessage());
             return false;
         }
     }
@@ -77,16 +59,33 @@ public class OpcUaDriver implements IDriver {
     }
 
     @Override
-    public void disconnect() { if (client != null) client.disconnect(); }
+    public Object read(Tag tag) {
+        if (!isConnected() || tag.getOpcNamespaceIndex() == null || tag.getOpcIdentifier() == null) {
+            return null;
+        }
+        try {
+            String identifierType = tag.getOpcIdentifierType() != null ? tag.getOpcIdentifierType().toUpperCase() : "STRING";
+            NodeId nodeId;
+            if ("INTEGER".equals(identifierType)) {
+                nodeId = new NodeId(tag.getOpcNamespaceIndex(), Integer.parseInt(tag.getOpcIdentifier()));
+            } else {
+                nodeId = new NodeId(tag.getOpcNamespaceIndex(), tag.getOpcIdentifier());
+            }
 
-    @Override
-    public boolean isConnected() {
-        return client != null && client.getSession().isDone() && !client.getSession().isCompletedExceptionally();
+            DataValue dataValue = client.readValue(0.0, null, nodeId).get();
+            if (dataValue != null && dataValue.getValue() != null && dataValue.getValue().isNotNull()) {
+                return dataValue.getValue().getValue();
+            }
+        } catch (Exception e) {
+            System.err.println("Erreur de lecture OPC UA pour le tag '" + tag.getName() + "': " + e.getMessage());
+        }
+        return null;
     }
 
     @Override
-    public Object read(Tag tag) { /* TODO */ return null; }
-
-    @Override
     public void write(Tag tag, Object value) { /* TODO */ }
+    @Override
+    public void disconnect() { if (client != null) client.disconnect(); }
+    @Override
+    public boolean isConnected() { return client != null && client.getSession().isDone() && !client.getSession().isCompletedExceptionally(); }
 }
