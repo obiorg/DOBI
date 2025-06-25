@@ -40,11 +40,6 @@ public class SupervisionController {
         return (details != null) ? ResponseEntity.ok(details) : ResponseEntity.notFound().build();
     }
 
-    @GetMapping("/tags/{id}/history")
-    public List<HistoryDataPointDto> getTagHistory(
-            @PathVariable Long id, 
-            @RequestParam(defaultValue = "0") int page, 
-            @RequestParam(defaultValue = "100") int size) {
-        return supervisionService.getTagHistory(id, page, size);
-    }
+    @GetMapping("/tags/{id}/history") public List<org.dobi.dto.HistoryDataPointDto> getTagHistory(@PathVariable Long id, @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "100") int size) { return supervisionService.getTagHistory(id, page, size); }
 }
+

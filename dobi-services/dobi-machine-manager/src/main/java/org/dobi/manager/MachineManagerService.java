@@ -76,11 +76,11 @@ public class MachineManagerService {
         }
     }
 
-    // --- MÉTHODE AJOUTÉE ---
+    // --- MÃ‰THODE AJOUTÃ‰E ---
     public org.dobi.entities.Tag getTagFromDb(long tagId) {
         EntityManager em = emf.createEntityManager();
         try {
-            // Utilise find qui est optimisé pour récupérer un objet par sa clé primaire.
+            // Utilise find qui est optimisÃ© pour rÃ©cupÃ©rer un objet par sa clÃ© primaire.
             return em.find(org.dobi.entities.Tag.class, tagId);
         } catch (Exception e) {
             System.err.println("Impossible de trouver le tag avec l'ID: " + tagId);
@@ -100,7 +100,7 @@ public class MachineManagerService {
                 .setMaxResults(size)
                 .getResultList();
         } catch (Exception e) {
-            System.err.println("Impossible de récupérer l'historique pour le tag ID: " + tagId);
+            System.err.println("Impossible de rÃ©cupÃ©rer l'historique pour le tag ID: " + tagId);
             return java.util.Collections.emptyList();
         } finally {
             em.close();
@@ -150,3 +150,4 @@ public class MachineManagerService {
             .collect(Collectors.toList());
     }
 }
+
