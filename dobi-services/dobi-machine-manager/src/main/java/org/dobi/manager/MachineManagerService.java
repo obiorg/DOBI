@@ -62,11 +62,11 @@ public class MachineManagerService {
         }
     }
     
-    // --- MÃ‰THODE AJOUTÃ‰E ---
+    // --- MÃƒâ€°THODE AJOUTÃƒâ€°E ---
     public Machine getMachineFromDb(long machineId) {
         EntityManager em = emf.createEntityManager();
         try {
-            // RequÃªte pour charger une seule machine avec tous ses tags et associations
+            // RequÃƒÂªte pour charger une seule machine avec tous ses tags et associations
             return em.createQuery(
                 "SELECT m FROM Machine m LEFT JOIN FETCH m.tags t LEFT JOIN FETCH t.type ty LEFT JOIN FETCH t.memory WHERE m.id = :id", Machine.class)
                 .setParameter("id", machineId)
@@ -131,11 +131,35 @@ public class MachineManagerService {
                 .setParameter("tagId", tagId)
                 .getResultList();
         } catch (Exception e) {
-            System.err.println("Impossible de récupérer l'historique pour le tag ID: " + tagId);
+            System.err.println("Impossible de rÃ©cupÃ©rer l'historique pour le tag ID: " + tagId);
             return java.util.Collections.emptyList();
         } finally {
             em.close();
         }
     }
+
+    public org.dobi.entities.Machine getMachineFromDb(long machineId) {
+        EntityManager em = emf.createEntityManager();
+        try {
+            return em.createQuery(
+                "SELECT m FROM Machine m LEFT JOIN FETCH m.tags t WHERE m.id = :id", org.dobi.entities.Machine.class)
+                .setParameter("id", machineId)
+                .getSingleResult();
+        } catch (Exception e) {
+            return null;
+        } finally {
+            em.close();
+        }
+    }
+
+    public org.dobi.entities.Tag getTagFromDb(long tagId) {
+        EntityManager em = emf.createEntityManager();
+        try {
+            return em.find(org.dobi.entities.Tag.class, tagId);
+        } finally {
+            em.close();
+        }
+    }
 }
+
 

@@ -41,6 +41,11 @@ public class SupervisionService {
         return new MachineDetailDto(machine.getId(), machine.getName(), currentStatus, tagDtos);
     }
 
+    public TagDetailDto getTagDetails(Long tagId) {
+        Tag tag = machineManagerService.getTagFromDb(tagId);
+        return (tag != null) ? toTagDetailDto(tag) : null;
+    }
+
     private TagDetailDto toTagDetailDto(Tag tag) {
         return new TagDetailDto(
             tag.getId(),
@@ -51,6 +56,7 @@ public class SupervisionService {
     }
 
     private Object getLiveValue(Tag tag) {
+        if (tag == null) return "N/A";
         if (tag.getvFloat() != null) return tag.getvFloat();
         if (tag.getvInt() != null) return tag.getvInt();
         if (tag.getvBool() != null) return tag.getvBool();
@@ -61,10 +67,8 @@ public class SupervisionService {
     
     public List<HistoryDataPointDto> getTagHistory(Long tagId) {
         List<PersStandard> history = machineManagerService.getTagHistory(tagId);
-
         return history.stream()
             .map(h -> {
-                // CORRECTION: On vérifie si vStamp n'est pas null avant de le formater.
                 String timestamp = (h.getvStamp() != null) ? h.getvStamp().format(HISTORY_FORMATTER) : "Date Inconnue";
                 Object value = getHistoryValue(h);
                 return new HistoryDataPointDto(timestamp, value);
@@ -73,6 +77,7 @@ public class SupervisionService {
     }
     
     private Object getHistoryValue(PersStandard history) {
+        if (history == null) return "N/A";
         if (history.getvFloat() != null) return history.getvFloat();
         if (history.getvInt() != null) return history.getvInt();
         if (history.getvBool() != null) return history.getvBool();

@@ -2,6 +2,8 @@ package org.dobi.app.controller;
 
 import org.dobi.dto.MachineDetailDto;
 import org.dobi.dto.MachineStatusDto;
+import org.dobi.dto.TagDetailDto;
+import org.dobi.dto.HistoryDataPointDto;
 import org.dobi.app.service.SupervisionService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -20,25 +22,26 @@ public class SupervisionController {
     @GetMapping("/machines")
     public List<MachineStatusDto> getAllMachineStatuses() { return supervisionService.getAllMachineStatuses(); }
     
+    @GetMapping("/machines/{id}")
+    public ResponseEntity<MachineDetailDto> getMachineDetails(@PathVariable Long id) {
+        MachineDetailDto details = supervisionService.getMachineDetails(id);
+        return (details != null) ? ResponseEntity.ok(details) : ResponseEntity.notFound().build();
+    }
+
     @PostMapping("/machines/{id}/restart")
     public ResponseEntity<Void> restartMachine(@PathVariable Long id) {
         supervisionService.restartMachineCollector(id);
         return ResponseEntity.ok().build();
     }
     
-    @GetMapping("/machines/{id}")
-    public ResponseEntity<MachineDetailDto> getMachineDetails(@PathVariable Long id) {
-        MachineDetailDto details = supervisionService.getMachineDetails(id);
-        if (details != null) {
-            return ResponseEntity.ok(details);
-        } else {
-            return ResponseEntity.notFound().build();
-        }
+    @GetMapping("/tags/{id}")
+    public ResponseEntity<TagDetailDto> getTagDetails(@PathVariable Long id) {
+        TagDetailDto details = supervisionService.getTagDetails(id);
+        return (details != null) ? ResponseEntity.ok(details) : ResponseEntity.notFound().build();
     }
 
     @GetMapping("/tags/{id}/history")
-    public List<org.dobi.dto.HistoryDataPointDto> getTagHistory(@PathVariable Long id) {
+    public List<HistoryDataPointDto> getTagHistory(@PathVariable Long id) {
         return supervisionService.getTagHistory(id);
     }
 }
-
