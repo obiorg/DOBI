@@ -11,12 +11,11 @@ import org.eclipse.milo.opcua.sdk.client.api.identity.UsernameProvider;
 import org.eclipse.milo.opcua.stack.client.DiscoveryClient;
 import org.eclipse.milo.opcua.stack.core.security.SecurityPolicy;
 import org.eclipse.milo.opcua.stack.core.types.structured.EndpointDescription;
+import org.eclipse.milo.opcua.stack.core.util.EndpointUtil; // Import ajouté
 
-import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Predicate;
 
 public class OpcUaDriver implements IDriver {
 
@@ -35,34 +34,23 @@ public class OpcUaDriver implements IDriver {
 
         try {
             int port = machine.getPort() != null ? machine.getPort() : 4840;
-            String endpointUrl = String.format("opc.tcp://%s:%d", machine.getAddress(), port);
+            String discoveryUrl = String.format("opc.tcp://%s:%d", machine.getAddress(), port);
             
-            System.out.println("[OPC-UA] Tentative de découverte des endpoints sur: " + endpointUrl);
+            System.out.println("[OPC-UA] Tentative de découverte des endpoints sur: " + discoveryUrl);
             
-            List<EndpointDescription> endpoints = DiscoveryClient.getEndpoints(endpointUrl).get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+            List<EndpointDescription> endpoints = DiscoveryClient.getEndpoints(discoveryUrl).get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
 
-            EndpointDescription endpoint = endpoints.stream()
+            EndpointDescription originalEndpoint = endpoints.stream()
                 .filter(e -> e.getSecurityPolicyUri().equals(SecurityPolicy.None.getUri()))
                 .findFirst()
                 .orElseThrow(() -> new Exception("Aucun endpoint de sécurité 'None' trouvé."));
             
-            // Logique de vérification d'hôte personnalisée
-            Predicate<String> hostnameVerifier = serverHostname -> {
-                String configuredHostname = machine.getHostname();
-                if (configuredHostname == null || configuredHostname.trim().isEmpty()) {
-                    System.out.println("[OPC-UA] Aucun hostname configuré, vérification acceptée pour l'hôte du serveur: " + serverHostname);
-                    return true;
-                }
-                boolean match = configuredHostname.equalsIgnoreCase(serverHostname);
-                if (!match) {
-                    System.err.println("[OPC-UA] ERREUR: Le nom d'hôte du serveur '" + serverHostname + "' ne correspond PAS à celui configuré ('" + configuredHostname + "').");
-                }
-                return match;
-            };
+            // CORRECTION: Forcer l'utilisation de l'adresse IP pour éviter la résolution DNS inversée
+            EndpointDescription endpoint = EndpointUtil.updateUrl(originalEndpoint, machine.getAddress(), port);
+            System.out.println("[OPC-UA] Endpoint choisi et forcé sur IP: " + endpoint.getEndpointUrl());
 
             OpcUaClientConfigBuilder cfg = OpcUaClientConfig.builder()
                 .setEndpoint(endpoint)
-                .setHostnameVerifier(hostnameVerifier) // Utilisation du vérificateur personnalisé
                 .setRequestTimeout(org.eclipse.milo.opcua.stack.core.types.builtin.unsigned.Unsigned.uint(TIMEOUT_SECONDS * 1000));
 
             getIdentityProvider().ifPresent(cfg::setIdentityProvider);
