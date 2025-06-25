@@ -62,11 +62,11 @@ public class MachineManagerService {
         }
     }
     
-    // --- MÃƒâ€°THODE AJOUTÃƒâ€°E ---
+    // --- MÃƒÆ’Ã¢â‚¬Â°THODE AJOUTÃƒÆ’Ã¢â‚¬Â°E ---
     public Machine getMachineFromDb(long machineId) {
         EntityManager em = emf.createEntityManager();
         try {
-            // RequÃƒÂªte pour charger une seule machine avec tous ses tags et associations
+            // RequÃƒÆ’Ã‚Âªte pour charger une seule machine avec tous ses tags et associations
             return em.createQuery(
                 "SELECT m FROM Machine m LEFT JOIN FETCH m.tags t LEFT JOIN FETCH t.type ty LEFT JOIN FETCH t.memory WHERE m.id = :id", Machine.class)
                 .setParameter("id", machineId)
@@ -123,15 +123,23 @@ public class MachineManagerService {
             .collect(Collectors.toList());
     }
 
-    public List<org.dobi.entities.PersStandard> getTagHistory(long tagId) {
+        public List<org.dobi.entities.PersStandard> getTagHistory(long tagId, int page, int size) {
         EntityManager em = emf.createEntityManager();
         try {
             return em.createQuery(
-                "SELECT h FROM PersStandard h WHERE h.tag = :tagId", org.dobi.entities.PersStandard.class)
+                "SELECT h FROM PersStandard h WHERE h.tag = :tagId ORDER BY h.vStamp DESC", org.dobi.entities.PersStandard.class)
                 .setParameter("tagId", tagId)
+                .setFirstResult(page * size)
+                .setMaxResults(size)
                 .getResultList();
         } catch (Exception e) {
-            System.err.println("Impossible de rÃ©cupÃ©rer l'historique pour le tag ID: " + tagId);
+            System.err.println("Impossible de récupérer l'historique pour le tag ID: " + tagId);
+            return java.util.Collections.emptyList();
+        } finally {
+            em.close();
+        }
+    } catch (Exception e) {
+            System.err.println("Impossible de rÃƒÂ©cupÃƒÂ©rer l'historique pour le tag ID: " + tagId);
             return java.util.Collections.emptyList();
         } finally {
             em.close();
@@ -161,5 +169,6 @@ public class MachineManagerService {
         }
     }
 }
+
 
 

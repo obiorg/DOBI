@@ -65,8 +65,8 @@ public class SupervisionService {
         return "N/A";
     }
     
-    public List<HistoryDataPointDto> getTagHistory(Long tagId) {
-        List<PersStandard> history = machineManagerService.getTagHistory(tagId);
+    public List<HistoryDataPointDto> getTagHistory(Long tagId, int page, int size) {
+        List<PersStandard> history = machineManagerService.getTagHistory(tagId, page, size);
         return history.stream()
             .map(h -> {
                 String timestamp = (h.getvStamp() != null) ? h.getvStamp().format(HISTORY_FORMATTER) : "Date Inconnue";
@@ -86,3 +86,4 @@ public class SupervisionService {
         return "N/A";
     }
 }
+
