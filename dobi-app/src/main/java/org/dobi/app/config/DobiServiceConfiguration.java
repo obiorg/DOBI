@@ -10,7 +10,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 // L'annotation @ComponentScan indique Ã  Spring de scanner les packages spÃ©cifiÃ©s
 // pour trouver des composants (@Service, @Component, etc.) Ã  gÃ©rer.
-@ComponentScan(basePackages = {"org.dobi.manager", "org.dobi.app.service"})
+@ComponentScan(basePackages = {"org.dobi.manager", "org.dobi.app.service", "org.dobi.app.controller"})
 public class DobiServiceConfiguration {
 
     @Bean
