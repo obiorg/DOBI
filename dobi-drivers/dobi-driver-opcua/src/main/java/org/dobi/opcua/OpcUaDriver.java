@@ -4,7 +4,6 @@ import org.dobi.api.IDriver;
 import org.dobi.entities.Machine;
 import org.dobi.entities.Tag;
 import org.eclipse.milo.opcua.sdk.client.OpcUaClient;
-import org.eclipse.milo.opcua.sdk.client.api.config.OpcUaClientConfig;
 import org.eclipse.milo.opcua.sdk.client.api.config.OpcUaClientConfigBuilder;
 import org.eclipse.milo.opcua.sdk.client.api.identity.IdentityProvider;
 import org.eclipse.milo.opcua.sdk.client.api.identity.UsernameProvider;
@@ -12,6 +11,7 @@ import org.eclipse.milo.opcua.stack.client.DiscoveryClient;
 import org.eclipse.milo.opcua.stack.core.security.SecurityPolicy;
 import org.eclipse.milo.opcua.stack.core.types.builtin.DataValue;
 import org.eclipse.milo.opcua.stack.core.types.builtin.NodeId;
+import org.eclipse.milo.opcua.stack.core.types.enumerated.TimestampsToReturn; // Import ajouté
 import org.eclipse.milo.opcua.stack.core.types.structured.EndpointDescription;
 import org.eclipse.milo.opcua.stack.core.util.EndpointUtil;
 import java.util.List;
@@ -33,11 +33,11 @@ public class OpcUaDriver implements IDriver {
             int port = machine.getPort() != null ? machine.getPort() : 4840;
             String endpointUrl = String.format("opc.tcp://%s:%d", machine.getAddress(), port);
             List<EndpointDescription> endpoints = DiscoveryClient.getEndpoints(endpointUrl).get(10, TimeUnit.SECONDS);
-            EndpointDescription endpoint = endpoints.stream()
+            EndpointDescription originalEndpoint = endpoints.stream()
                 .filter(e -> e.getSecurityPolicyUri().equals(SecurityPolicy.None.getUri()))
                 .findFirst().orElseThrow(() -> new Exception("Aucun endpoint de sécurité 'None' trouvé."));
-            EndpointDescription updatedEndpoint = EndpointUtil.updateUrl(endpoint, machine.getAddress(), port);
-            OpcUaClientConfigBuilder cfg = OpcUaClientConfig.builder().setEndpoint(updatedEndpoint);
+            EndpointDescription endpoint = EndpointUtil.updateUrl(originalEndpoint, machine.getAddress(), port);
+            OpcUaClientConfigBuilder cfg = OpcUaClientConfig.builder().setEndpoint(endpoint);
             getIdentityProvider().ifPresent(cfg::setIdentityProvider);
             client = OpcUaClient.create(cfg.build());
             client.connect().get(10, TimeUnit.SECONDS);
@@ -72,7 +72,9 @@ public class OpcUaDriver implements IDriver {
                 nodeId = new NodeId(tag.getOpcNamespaceIndex(), tag.getOpcIdentifier());
             }
 
-            DataValue dataValue = client.readValue(0.0, null, nodeId).get();
+            // CORRECTION: Remplacer 'null' par une valeur valide
+            DataValue dataValue = client.readValue(0.0, TimestampsToReturn.Both, nodeId).get();
+
             if (dataValue != null && dataValue.getValue() != null && dataValue.getValue().isNotNull()) {
                 return dataValue.getValue().getValue();
             }
