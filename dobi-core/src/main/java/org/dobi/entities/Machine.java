@@ -22,25 +22,13 @@ public class Machine extends BaseEntity {
     private Integer slot;
     private Integer bus;
 
-    // --- Champs OPC UA ajoutÃ©s ---
-    @Column(name = "opcua_security_policy")
-    private String opcuaSecurityPolicy;
-    @Column(name = "opcua_user")
-    private String opcuaUser;
-    @Column(name = "opcua_password")
-    private String opcuaPassword;
-    @Column(name = "opcua_keystore_path")
-    private String opcuaKeystorePath;
-    @Column(name = "opcua_keystore_password")
-    private String opcuaKeystorePassword;
-
-    @Column(name = "hostname") private String hostname;
-    // --- Fin des champs OPC UA ---
-
+    // --- Lignes ajoutées ---
     @Column(name = "mqtt_user")
     private String mqttUser;
+
     @Column(name = "mqtt_password")
     private String mqttPassword;
+    // --- Fin des lignes ajoutées ---
 
     @OneToMany(mappedBy = "machine", cascade = CascadeType.ALL)
     private List<Tag> tags;
@@ -66,31 +54,18 @@ public class Machine extends BaseEntity {
     public void setSlot(Integer slot) { this.slot = slot; }
     public Integer getBus() { return bus; }
     public void setBus(Integer bus) { this.bus = bus; }
+    
+    // --- Méthodes ajoutées ---
     public String getMqttUser() { return mqttUser; }
     public void setMqttUser(String mqttUser) { this.mqttUser = mqttUser; }
     public String getMqttPassword() { return mqttPassword; }
     public void setMqttPassword(String mqttPassword) { this.mqttPassword = mqttPassword; }
+    // --- Fin des méthodes ajoutées ---
+
     public List<Tag> getTags() { return tags; }
     public void setTags(List<Tag> tags) { this.tags = tags; }
     public Company getCompany() { return company; }
     public void setCompany(Company company) { this.company = company; }
     public MachDriver getDriver() { return driver; }
     public void setDriver(MachDriver driver) { this.driver = driver; }
-
-    // --- Getters et Setters pour les champs OPC UA ---
-    public String getOpcuaSecurityPolicy() { return opcuaSecurityPolicy; }
-    public void setOpcuaSecurityPolicy(String opcuaSecurityPolicy) { this.opcuaSecurityPolicy = opcuaSecurityPolicy; }
-    public String getOpcuaUser() { return opcuaUser; }
-    public void setOpcuaUser(String opcuaUser) { this.opcuaUser = opcuaUser; }
-    public String getOpcuaPassword() { return opcuaPassword; }
-    public void setOpcuaPassword(String opcuaPassword) { this.opcuaPassword = opcuaPassword; }
-    public String getOpcuaKeystorePath() { return opcuaKeystorePath; }
-    public void setOpcuaKeystorePath(String opcuaKeystorePath) { this.opcuaKeystorePath = opcuaKeystorePath; }
-    public String getOpcuaKeystorePassword() { return opcuaKeystorePassword; }
-    public void setOpcuaKeystorePassword(String opcuaKeystorePassword) { this.opcuaKeystorePassword = opcuaKeystorePassword; }
-
-
-    public String getHostname() { return hostname; }
-    public void setHostname(String hostname) { this.hostname = hostname; }
 }
-

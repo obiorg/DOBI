@@ -11,7 +11,7 @@ import org.eclipse.milo.opcua.stack.client.DiscoveryClient;
 import org.eclipse.milo.opcua.stack.core.security.SecurityPolicy;
 import org.eclipse.milo.opcua.stack.core.types.builtin.DataValue;
 import org.eclipse.milo.opcua.stack.core.types.builtin.NodeId;
-import org.eclipse.milo.opcua.stack.core.types.enumerated.TimestampsToReturn; // Import ajouté
+import org.eclipse.milo.opcua.stack.core.types.enumerated.TimestampsToReturn;
 import org.eclipse.milo.opcua.stack.core.types.structured.EndpointDescription;
 import org.eclipse.milo.opcua.stack.core.util.EndpointUtil;
 import java.util.List;
@@ -72,8 +72,8 @@ public class OpcUaDriver implements IDriver {
                 nodeId = new NodeId(tag.getOpcNamespaceIndex(), tag.getOpcIdentifier());
             }
 
-            // CORRECTION: Remplacer 'null' par une valeur valide
-            DataValue dataValue = client.readValue(0.0, TimestampsToReturn.Both, nodeId).get();
+            // CORRECTION: Remplacer 'null' par une valeur valide pour le paramètre de timestamp
+            DataValue dataValue = client.readValue(0.0, TimestampsToReturn.Source, nodeId).get();
 
             if (dataValue != null && dataValue.getValue() != null && dataValue.getValue().isNotNull()) {
                 return dataValue.getValue().getValue();
