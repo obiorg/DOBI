@@ -23,6 +23,11 @@
         </dependency>
         <dependency>
             <groupId>org.dobi</groupId>
+            <artifactId>dobi-driver-opcua</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.dobi</groupId>
             <artifactId>dobi-driver-siemens</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -31,10 +36,10 @@
             <artifactId>dobi-kafka-producer</artifactId>
             <version>${project.version}</version>
         </dependency>
-        <dependency>
+<!--        <dependency>
             <groupId>org.dobi</groupId>
             <artifactId>dobi-ui-common</artifactId>
             <version>${project.version}</version>
-        </dependency>
+        </dependency>-->
     </dependencies>
 </project>

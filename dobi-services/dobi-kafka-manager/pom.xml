@@ -13,6 +13,12 @@
     <name>DOBI :: Service :: Kafka Manager</name>
 
     <dependencies>
-        <!-- Aucune dépendance spécifique pour le moment -->
+                <dependency>
+            <groupId>org.dobi</groupId>
+            <artifactId>dobi-core</artifactId>
+            <version>${project.version}</version>
+        </dependency>
     </dependencies>
 </project>
+
+
