@@ -20,6 +20,7 @@
         <module>dobi-driver-siemens</module>
             <module>dobi-driver-modbus</module>
             <module>dobi-driver-opcua</module>
+        <module>dobi-driver-profinet</module>
     </modules>
 
 </project>

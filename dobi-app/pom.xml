@@ -27,15 +27,17 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
-                <dependency>
-            <groupId>org.dobi</groupId>
-            <artifactId>dobi-kafka-manager</artifactId>
-            <version>${project.version}</version>
-        </dependency>            <dependency>
-            <groupId>org.dobi</groupId>
-            <artifactId>dobi-driver-opcua</artifactId>
-            <version>${project.version}</version>
-        </dependency>    </dependencies>
+            <dependency>
+                <groupId>org.dobi</groupId>
+                <artifactId>dobi-kafka-manager</artifactId>
+                <version>${project.version}</version>
+            </dependency>            
+            <dependency>
+                <groupId>org.dobi</groupId>
+                <artifactId>dobi-driver-opcua</artifactId>
+                <version>${project.version}</version>
+            </dependency>    
+        </dependencies>
     </dependencyManagement>
 
     <dependencies>
@@ -53,15 +55,22 @@
             <artifactId>dobi-kafka-consumer</artifactId>
             <version>${project.version}</version>
         </dependency>
-            <dependency>
+        <dependency>
             <groupId>org.dobi</groupId>
             <artifactId>dobi-kafka-manager</artifactId>
             <version>${project.version}</version>
-        </dependency>            <dependency>
+        </dependency>            
+        <dependency>
             <groupId>org.dobi</groupId>
             <artifactId>dobi-driver-opcua</artifactId>
             <version>${project.version}</version>
-        </dependency>    </dependencies>
+        </dependency>             
+        <dependency>
+            <groupId>org.dobi</groupId>
+            <artifactId>dobi-driver-profinet</artifactId>
+            <version>${project.version}</version>
+        </dependency>    
+    </dependencies>
 
     <build>
         <plugins>

@@ -33,6 +33,16 @@
         </dependency>
         <dependency>
             <groupId>org.dobi</groupId>
+            <artifactId>dobi-driver-modbus</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.dobi</groupId>
+            <artifactId>dobi-driver-profinet</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.dobi</groupId>
             <artifactId>dobi-kafka-producer</artifactId>
             <version>${project.version}</version>
         </dependency>

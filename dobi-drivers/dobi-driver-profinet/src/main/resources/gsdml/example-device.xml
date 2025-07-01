@@ -1,0 +1,428 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Fichier GSDML d'exemple pour équipement Profinet générique
+    À placer dans : src/main/resources/gsdml/example-device.xml
+-->
+<ISO15745Profile xmlns="http://www.profibus.com/GSDML/2003/11/DeviceProfile" 
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 xsi:schemaLocation="http://www.profibus.com/GSDML/2003/11/DeviceProfile GSDML-DeviceProfile-v2.35.xsd">
+
+    <ProfileHeader>
+        <ProfileIdentification>PROFINET Device Profile</ProfileIdentification>
+        <ProfileRevision>1.00</ProfileRevision>
+        <ProfileName>Device Profile for PROFINET Devices</ProfileName>
+        <ProfileSource>PROFIBUS &amp; PROFINET International (PI)</ProfileSource>
+        <ProfileClassID>Device</ProfileClassID>
+        <ISO15745Reference>
+            <ISO15745Part>4</ISO15745Part>
+            <ISO15745Edition>1</ISO15745Edition>
+            <ProfileTechnology>PROFINET</ProfileTechnology>
+        </ISO15745Reference>
+    </ProfileHeader>
+
+    <ProfileBody>
+        <DeviceIdentity VendorID="0x42DB" DeviceID="0x0001">
+            <InfoText TextId="InfoText_DeviceIdentity"/>
+            <VendorName Value="DOBI Systems"/>
+        </DeviceIdentity>
+
+        <DeviceFunction>
+            <Family MainFamily="I/O" ProductFamily="Generic I/O"/>
+        </DeviceFunction>
+
+        <!-- Informations du périphérique -->
+        <Device DeviceName="DOBI_Generic_IO" 
+                DeviceType="Generic I/O Device" 
+                VendorName="DOBI Systems" 
+                Version="1.0"
+                DeviceID="1" 
+                VendorID="17115">
+
+            <DeviceInfo>
+                <InfoText TextId="InfoText_Device"/>
+                <VendorSpecificInfo>
+                    <InfoText TextId="InfoText_VendorSpecific"/>
+                </VendorSpecificInfo>
+            </DeviceInfo>
+
+            <!-- Configuration réseau -->
+            <ApplicationProcess>
+                <DeviceAccessPointList>
+                    <DeviceAccessPoint ID="1" 
+                                     PNIO_Version="V2.35" 
+                                     PhysicalSlots="0..4" 
+                                     ModuleIdentNumber="0x00000001" 
+                                     MinDeviceInterval="32" 
+                                     DNS_CompatibleName="dobi-generic-io" 
+                                     FixedInSlots="0" 
+                                     ObjectUUID_LocalIndex="1">
+
+                        <ModuleInfo>
+                            <Name TextId="Name_DeviceAccessPoint"/>
+                            <InfoText TextId="InfoText_DeviceAccessPoint"/>
+                        </ModuleInfo>
+
+                        <!-- Slots disponibles -->
+                        <SlotList>
+                            <!-- Slot 0 : Interface Module (obligatoire) -->
+                            <Slot SlotNumber="0" ModuleType="Interface" ModuleName="Interface Module">
+                                <ModuleInfo>
+                                    <Name TextId="Name_InterfaceModule"/>
+                                    <InfoText TextId="InfoText_InterfaceModule"/>
+                                </ModuleInfo>
+                                
+                                <SubmoduleList>
+                                    <Submodule Index="1" 
+                                             Name="Interface Submodule" 
+                                             Type="Interface"
+                                             InputOffset="0" 
+                                             OutputOffset="0" 
+                                             InputLength="0" 
+                                             OutputLength="0">
+                                        <ModuleInfo>
+                                            <Name TextId="Name_InterfaceSubmodule"/>
+                                        </ModuleInfo>
+                                    </Submodule>
+                                </SubmoduleList>
+                            </Slot>
+
+                            <!-- Slot 1 : Module Digital I/O -->
+                            <Slot SlotNumber="1" ModuleType="Digital I/O" ModuleName="DI 16x24VDC / DO 16x24VDC">
+                                <ModuleInfo>
+                                    <Name TextId="Name_DigitalModule"/>
+                                    <InfoText TextId="InfoText_DigitalModule"/>
+                                </ModuleInfo>
+                                
+                                <InputSize>2</InputSize>
+                                <OutputSize>2</OutputSize>
+                                
+                                <SubmoduleList>
+                                    <Submodule Index="1" 
+                                             Name="Digital Input Submodule" 
+                                             Type="Digital Input"
+                                             InputOffset="0" 
+                                             OutputOffset="0" 
+                                             InputLength="2" 
+                                             OutputLength="0">
+                                        <ModuleInfo>
+                                            <Name TextId="Name_DigitalInputSubmodule"/>
+                                            <InfoText TextId="InfoText_DigitalInputSubmodule"/>
+                                        </ModuleInfo>
+                                        
+                                        <IOData>
+                                            <Input Consistency="Item consistency">
+                                                <DataItem DataType="Unsigned8" BitLength="8" BitOffset="0" TextId="DI_Byte0"/>
+                                                <DataItem DataType="Unsigned8" BitLength="8" BitOffset="8" TextId="DI_Byte1"/>
+                                            </Input>
+                                        </IOData>
+                                    </Submodule>
+                                    
+                                    <Submodule Index="2" 
+                                             Name="Digital Output Submodule" 
+                                             Type="Digital Output"
+                                             InputOffset="0" 
+                                             OutputOffset="0" 
+                                             InputLength="0" 
+                                             OutputLength="2">
+                                        <ModuleInfo>
+                                            <Name TextId="Name_DigitalOutputSubmodule"/>
+                                            <InfoText TextId="InfoText_DigitalOutputSubmodule"/>
+                                        </ModuleInfo>
+                                        
+                                        <IOData>
+                                            <Output Consistency="Item consistency">
+                                                <DataItem DataType="Unsigned8" BitLength="8" BitOffset="0" TextId="DO_Byte0"/>
+                                                <DataItem DataType="Unsigned8" BitLength="8" BitOffset="8" TextId="DO_Byte1"/>
+                                            </Output>
+                                        </IOData>
+                                    </Submodule>
+                                </SubmoduleList>
+                            </Slot>
+
+                            <!-- Slot 2 : Module Analog I/O -->
+                            <Slot SlotNumber="2" ModuleType="Analog I/O" ModuleName="AI 4x0-10V / AO 2x0-10V">
+                                <ModuleInfo>
+                                    <Name TextId="Name_AnalogModule"/>
+                                    <InfoText TextId="InfoText_AnalogModule"/>
+                                </ModuleInfo>
+                                
+                                <InputSize>8</InputSize>
+                                <OutputSize>4</OutputSize>
+                                
+                                <SubmoduleList>
+                                    <Submodule Index="1" 
+                                             Name="Analog Input Submodule" 
+                                             Type="Analog Input"
+                                             InputOffset="0" 
+                                             OutputOffset="0" 
+                                             InputLength="8" 
+                                             OutputLength="0">
+                                        <ModuleInfo>
+                                            <Name TextId="Name_AnalogInputSubmodule"/>
+                                            <InfoText TextId="InfoText_AnalogInputSubmodule"/>
+                                        </ModuleInfo>
+                                        
+                                        <IOData>
+                                            <Input Consistency="Item consistency">
+                                                <DataItem DataType="Unsigned16" BitLength="16" BitOffset="0" TextId="AI_Channel0"/>
+                                                <DataItem DataType="Unsigned16" BitLength="16" BitOffset="16" TextId="AI_Channel1"/>
+                                                <DataItem DataType="Unsigned16" BitLength="16" BitOffset="32" TextId="AI_Channel2"/>
+                                                <DataItem DataType="Unsigned16" BitLength="16" BitOffset="48" TextId="AI_Channel3"/>
+                                            </Input>
+                                        </IOData>
+                                    </Submodule>
+                                    
+                                    <Submodule Index="2" 
+                                             Name="Analog Output Submodule" 
+                                             Type="Analog Output"
+                                             InputOffset="0" 
+                                             OutputOffset="0" 
+                                             InputLength="0" 
+                                             OutputLength="4">
+                                        <ModuleInfo>
+                                            <Name TextId="Name_AnalogOutputSubmodule"/>
+                                            <InfoText TextId="InfoText_AnalogOutputSubmodule"/>
+                                        </ModuleInfo>
+                                        
+                                        <IOData>
+                                            <Output Consistency="Item consistency">
+                                                <DataItem DataType="Unsigned16" BitLength="16" BitOffset="0" TextId="AO_Channel0"/>
+                                                <DataItem DataType="Unsigned16" BitLength="16" BitOffset="16" TextId="AO_Channel1"/>
+                                            </Output>
+                                        </IOData>
+                                    </Submodule>
+                                </SubmoduleList>
+                            </Slot>
+
+                            <!-- Slot 3 : Module Temperature -->
+                            <Slot SlotNumber="3" ModuleType="Temperature" ModuleName="RTD 4xPT100">
+                                <ModuleInfo>
+                                    <Name TextId="Name_TemperatureModule"/>
+                                    <InfoText TextId="InfoText_TemperatureModule"/>
+                                </ModuleInfo>
+                                
+                                <InputSize>16</InputSize>
+                                <OutputSize>0</OutputSize>
+                                
+                                <SubmoduleList>
+                                    <Submodule Index="1" 
+                                             Name="Temperature Submodule" 
+                                             Type="Temperature"
+                                             InputOffset="0" 
+                                             OutputOffset="0" 
+                                             InputLength="16" 
+                                             OutputLength="0">
+                                        <ModuleInfo>
+                                            <Name TextId="Name_TemperatureSubmodule"/>
+                                            <InfoText TextId="InfoText_TemperatureSubmodule"/>
+                                        </ModuleInfo>
+                                        
+                                        <IOData>
+                                            <Input Consistency="Item consistency">
+                                                <DataItem DataType="Integer32" BitLength="32" BitOffset="0" TextId="TEMP_Sensor0"/>
+                                                <DataItem DataType="Integer32" BitLength="32" BitOffset="32" TextId="TEMP_Sensor1"/>
+                                                <DataItem DataType="Integer32" BitLength="32" BitOffset="64" TextId="TEMP_Sensor2"/>
+                                                <DataItem DataType="Integer32" BitLength="32" BitOffset="96" TextId="TEMP_Sensor3"/>
+                                            </Input>
+                                        </IOData>
+                                    </Submodule>
+                                </SubmoduleList>
+                            </Slot>
+
+                            <!-- Slot 4 : Module Counter/Encoder -->
+                            <Slot SlotNumber="4" ModuleType="Counter" ModuleName="Counter 2x32-bit">
+                                <ModuleInfo>
+                                    <Name TextId="Name_CounterModule"/>
+                                    <InfoText TextId="InfoText_CounterModule"/>
+                                </ModuleInfo>
+                                
+                                <InputSize>8</InputSize>
+                                <OutputSize>0</OutputSize>
+                                
+                                <SubmoduleList>
+                                    <Submodule Index="1" 
+                                             Name="Counter Submodule" 
+                                             Type="Counter"
+                                             InputOffset="0" 
+                                             OutputOffset="0" 
+                                             InputLength="8" 
+                                             OutputLength="0">
+                                        <ModuleInfo>
+                                            <Name TextId="Name_CounterSubmodule"/>
+                                            <InfoText TextId="InfoText_CounterSubmodule"/>
+                                        </ModuleInfo>
+                                        
+                                        <IOData>
+                                            <Input Consistency="Item consistency">
+                                                <DataItem DataType="Unsigned32" BitLength="32" BitOffset="0" TextId="CNT_Counter0"/>
+                                                <DataItem DataType="Unsigned32" BitLength="32" BitOffset="32" TextId="CNT_Counter1"/>
+                                            </Input>
+                                        </IOData>
+                                    </Submodule>
+                                </SubmoduleList>
+                            </Slot>
+                        </SlotList>
+
+                        <!-- Configuration des alarmes -->
+                        <AlarmConfiguration>
+                            <AlarmItem AlarmType="Diagnosis" API="0" SlotNumber="1" SubslotNumber="1" AlarmSpecifier="Appears"/>
+                            <AlarmItem AlarmType="Process" API="0" SlotNumber="1" SubslotNumber="1" AlarmSpecifier="Appears"/>
+                            <AlarmItem AlarmType="Pull" API="0" SlotNumber="1" SubslotNumber="1" AlarmSpecifier="Appears"/>
+                            <AlarmItem AlarmType="Plug" API="0" SlotNumber="1" SubslotNumber="1" AlarmSpecifier="Appears"/>
+                        </AlarmConfiguration>
+
+                        <!-- Propriétés réseau -->
+                        <SystemDefinedSubmoduleList>
+                            <InterfaceSubmoduleItem ID="1" 
+                                                  SubmoduleIdentNumber="0x00000001" 
+                                                  SubslotNumber="0x8000" 
+                                                  TextId="IDS_IM_Interface">
+                                <ApplicationRelations StartupMode="Advanced">
+                                    <TimingProperties SendClock="32" ReductionRatio="1,2,4,8,16,32,64,128,256,512"/>
+                                </ApplicationRelations>
+                            </InterfaceSubmoduleItem>
+                            
+                            <PortSubmoduleItem ID="1" 
+                                             SubmoduleIdentNumber="0x00000002" 
+                                             SubslotNumber="0x8001" 
+                                             TextId="IDS_IM_Port1">
+                                <MAUTypeList>
+                                    <MAUTypeItem Value="16"/>  <!-- 100BASE-TX Full Duplex -->
+                                    <MAUTypeItem Value="20"/>  <!-- 100BASE-TX Auto-negotiation -->
+                                </MAUTypeList>
+                            </PortSubmoduleItem>
+                        </SystemDefinedSubmoduleList>
+                    </DeviceAccessPoint>
+                </DeviceAccessPointList>
+            </ApplicationProcess>
+
+            <!-- Paramètres du périphérique -->
+            <DeviceParameters>
+                <ParameterSet Name="Device Parameters">
+                    <Parameter Name="Device Name" 
+                             DataType="VisibleString" 
+                             Changeable="true" 
+                             Visible="true"
+                             DefaultValue="DOBI_Generic_IO">
+                        <Description TextId="Param_DeviceName"/>
+                    </Parameter>
+                    
+                    <Parameter Name="IP Address" 
+                             DataType="IPAddress" 
+                             Changeable="true" 
+                             Visible="true"
+                             DefaultValue="192.168.1.100">
+                        <Description TextId="Param_IPAddress"/>
+                    </Parameter>
+                    
+                    <Parameter Name="Subnet Mask" 
+                             DataType="IPAddress" 
+                             Changeable="true" 
+                             Visible="true"
+                             DefaultValue="255.255.255.0">
+                        <Description TextId="Param_SubnetMask"/>
+                    </Parameter>
+                    
+                    <Parameter Name="Gateway" 
+                             DataType="IPAddress" 
+                             Changeable="true" 
+                             Visible="true"
+                             DefaultValue="192.168.1.1">
+                        <Description TextId="Param_Gateway"/>
+                    </Parameter>
+                </ParameterSet>
+            </DeviceParameters>
+
+            <!-- Graphiques et icônes -->
+            <GraphicsList>
+                <GraphicItem GraphicFile="dobi_device.bmp" GraphicItemType="DeviceSymbol"/>
+            </GraphicsList>
+        </Device>
+
+        <!-- Textes et descriptions -->
+        <ExternalTextList>
+            <PrimaryLanguage>
+                <Text TextId="InfoText_DeviceIdentity" Value="DOBI Generic I/O Device for Profinet Networks"/>
+                <Text TextId="InfoText_Device" Value="Multi-purpose I/O device with digital, analog, and specialized modules"/>
+                <Text TextId="InfoText_VendorSpecific" Value="Developed by DOBI Systems for industrial automation"/>
+                
+                <Text TextId="Name_DeviceAccessPoint" Value="Device Access Point"/>
+                <Text TextId="InfoText_DeviceAccessPoint" Value="Main communication interface"/>
+                
+                <Text TextId="Name_InterfaceModule" Value="Interface Module"/>
+                <Text TextId="InfoText_InterfaceModule" Value="Network interface module"/>
+                <Text TextId="Name_InterfaceSubmodule" Value="Interface Submodule"/>
+                
+                <Text TextId="Name_DigitalModule" Value="Digital I/O Module"/>
+                <Text TextId="InfoText_DigitalModule" Value="16 digital inputs and 16 digital outputs, 24VDC"/>
+                <Text TextId="Name_DigitalInputSubmodule" Value="Digital Input Submodule"/>
+                <Text TextId="InfoText_DigitalInputSubmodule" Value="16 digital inputs, 24VDC"/>
+                <Text TextId="Name_DigitalOutputSubmodule" Value="Digital Output Submodule"/>
+                <Text TextId="InfoText_DigitalOutputSubmodule" Value="16 digital outputs, 24VDC"/>
+                
+                <Text TextId="Name_AnalogModule" Value="Analog I/O Module"/>
+                <Text TextId="InfoText_AnalogModule" Value="4 analog inputs and 2 analog outputs, 0-10V"/>
+                <Text TextId="Name_AnalogInputSubmodule" Value="Analog Input Submodule"/>
+                <Text TextId="InfoText_AnalogInputSubmodule" Value="4 analog inputs, 0-10V, 16-bit resolution"/>
+                <Text TextId="Name_AnalogOutputSubmodule" Value="Analog Output Submodule"/>
+                <Text TextId="InfoText_AnalogOutputSubmodule" Value="2 analog outputs, 0-10V, 16-bit resolution"/>
+                
+                <Text TextId="Name_TemperatureModule" Value="Temperature Module"/>
+                <Text TextId="InfoText_TemperatureModule" Value="4 RTD inputs for PT100/PT1000 temperature sensors"/>
+                <Text TextId="Name_TemperatureSubmodule" Value="Temperature Submodule"/>
+                <Text TextId="InfoText_TemperatureSubmodule" Value="4 RTD channels, -200°C to +850°C"/>
+                
+                <Text TextId="Name_CounterModule" Value="Counter Module"/>
+                <Text TextId="InfoText_CounterModule" Value="2 high-speed counters, 32-bit, up to 1MHz"/>
+                <Text TextId="Name_CounterSubmodule" Value="Counter Submodule"/>
+                <Text TextId="InfoText_CounterSubmodule" Value="2 independent 32-bit counters"/>
+                
+                <!-- Descriptions des paramètres -->
+                <Text TextId="Param_DeviceName" Value="Profinet device name for network identification"/>
+                <Text TextId="Param_IPAddress" Value="Device IP address"/>
+                <Text TextId="Param_SubnetMask" Value="Network subnet mask"/>
+                <Text TextId="Param_Gateway" Value="Default gateway address"/>
+                
+                <!-- Descriptions des données I/O -->
+                <Text TextId="DI_Byte0" Value="Digital inputs 0-7"/>
+                <Text TextId="DI_Byte1" Value="Digital inputs 8-15"/>
+                <Text TextId="DO_Byte0" Value="Digital outputs 0-7"/>
+                <Text TextId="DO_Byte1" Value="Digital outputs 8-15"/>
+                
+                <Text TextId="AI_Channel0" Value="Analog input channel 0"/>
+                <Text TextId="AI_Channel1" Value="Analog input channel 1"/>
+                <Text TextId="AI_Channel2" Value="Analog input channel 2"/>
+                <Text TextId="AI_Channel3" Value="Analog input channel 3"/>
+                <Text TextId="AO_Channel0" Value="Analog output channel 0"/>
+                <Text TextId="AO_Channel1" Value="Analog output channel 1"/>
+                
+                <Text TextId="TEMP_Sensor0" Value="Temperature sensor 0 (PT100)"/>
+                <Text TextId="TEMP_Sensor1" Value="Temperature sensor 1 (PT100)"/>
+                <Text TextId="TEMP_Sensor2" Value="Temperature sensor 2 (PT100)"/>
+                <Text TextId="TEMP_Sensor3" Value="Temperature sensor 3 (PT100)"/>
+                
+                <Text TextId="CNT_Counter0" Value="High-speed counter 0"/>
+                <Text TextId="CNT_Counter1" Value="High-speed counter 1"/>
+                
+                <Text TextId="IDS_IM_Interface" Value="Network Interface"/>
+                <Text TextId="IDS_IM_Port1" Value="Ethernet Port 1"/>
+            </PrimaryLanguage>
+        </ExternalTextList>
+
+        <!-- Configuration des catégories -->
+        <CategoryList>
+            <Category Name="Digital I/O">
+                <Description TextId="InfoText_DigitalModule"/>
+            </Category>
+            <Category Name="Analog I/O">
+                <Description TextId="InfoText_AnalogModule"/>
+            </Category>
+            <Category Name="Temperature">
+                <Description TextId="InfoText_TemperatureModule"/>
+            </Category>
+            <Category Name="Counter">
+                <Description TextId="InfoText_CounterModule"/>
+            </Category>
+        </CategoryList>
+    </ProfileBody>
+</ISO15745Profile>
