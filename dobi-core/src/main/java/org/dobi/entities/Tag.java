@@ -22,6 +22,14 @@ public class Tag extends BaseEntity {
     private String vStr;
     private LocalDateTime vDateTime;
     private LocalDateTime vStamp;
+    
+    // Dans Tag.java, ajouter :
+@Column(name = "cycle")
+private Integer cycle; // Fréquence en secondes
+
+@Column(name = "persistence_enable")
+private Boolean persistenceEnable = false;
+
 
     @Column(name = "opc_namespace_index")
     private Integer opcNamespaceIndex;
@@ -77,4 +85,10 @@ public class Tag extends BaseEntity {
     public void setType(TagType type) { this.type = type; }
     public TagMemory getMemory() { return memory; }
     public void setMemory(TagMemory memory) { this.memory = memory; }
+
+    public Integer getCycle() {     return cycle;   }
+    public void setCycle(Integer cycle) {     this.cycle = cycle;    }
+    public Boolean getPersistenceEnable() {    return persistenceEnable;    }
+    public void setPersistenceEnable(Boolean persistenceEnable) {    this.persistenceEnable = persistenceEnable;}
+    
 }

@@ -3,6 +3,7 @@ package org.dobi.kafka.consumer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.NoResultException; // Ajouté
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -12,6 +13,7 @@ import org.apache.kafka.common.serialization.StringDeserializer;
 import org.dobi.dto.TagData;
 import org.dobi.entities.PersStandard;
 import org.dobi.entities.Tag;
+import org.dobi.entities.Persistence; // Ajouté
 
 import java.time.Duration;
 import java.time.Instant;
@@ -158,22 +160,50 @@ public class KafkaConsumerService implements Runnable {
 
                 LogLevelManager.logTrace(COMPONENT_NAME, "Tag mis à jour: " + tag.getName() + " = " + data.value());
 
-                // Création de l'entrée d'historique
-                PersStandard history = new PersStandard();
-                history.setTag(data.tagId());
+                // === LOGIQUE DE PERSISTANCE CONDITIONNELLE ===
+                if (tag.getPersistenceEnable() != null && tag.getPersistenceEnable()) {
+                    try {
+                        // Récupérer l'entrée de persistance pour ce tag
+                        Persistence persistenceConfig = em.createQuery(
+                            "SELECT p FROM Persistence p WHERE p.tag.id = :tagId", Persistence.class)
+                            .setParameter("tagId", tag.getId())
+                            .getSingleResult();
 
-                if (tag.getMachine() != null && tag.getMachine().getCompany() != null) {
-                    history.setCompany(tag.getMachine().getCompany().getId().intValue());
-                    LogLevelManager.logTrace(COMPONENT_NAME, "Company ID associée: " + tag.getMachine().getCompany().getId());
+                        // Vérifier la méthode et l'activation de la persistance
+                        if (persistenceConfig.getMethod() != null && persistenceConfig.getMethod() == 1 &&
+                            persistenceConfig.getActivate() != null && persistenceConfig.getActivate()) {
+
+                            // Création de l'entrée d'historique
+                            PersStandard history = new PersStandard();
+                            history.setTag(data.tagId());
+
+                            if (tag.getMachine() != null && tag.getMachine().getCompany() != null) {
+                                history.setCompany(tag.getMachine().getCompany().getId().intValue());
+                                LogLevelManager.logTrace(COMPONENT_NAME, "Company ID associée: " + tag.getMachine().getCompany().getId());
+                            } else {
+                                LogLevelManager.logDebug(COMPONENT_NAME, "Aucune company associée au tag: " + tag.getName());
+                            }
+
+                            updateHistoryValue(history, data.value());
+                            history.setvStamp(LocalDateTime.ofInstant(Instant.ofEpochMilli(data.timestamp()), ZoneId.systemDefault()));
+                            em.persist(history);
+
+                            LogLevelManager.logTrace(COMPONENT_NAME, "Entrée historique créée pour tag: " + tag.getName());
+                        } else {
+                            LogLevelManager.logDebug(COMPONENT_NAME, "Persistance non activée ou méthode incorrecte pour tag " + tag.getName() + 
+                                " (PersistenceEnable: " + tag.getPersistenceEnable() + 
+                                ", Method: " + persistenceConfig.getMethod() + 
+                                ", Activate: " + persistenceConfig.getActivate() + ")");
+                        }
+                    } catch (NoResultException nre) {
+                        LogLevelManager.logDebug(COMPONENT_NAME, "Aucune configuration de persistance trouvée pour le tag " + tag.getName() + ", persistance ignorée.");
+                    } catch (Exception e) {
+                        LogLevelManager.logError(COMPONENT_NAME, "Erreur lors de la vérification de la configuration de persistance pour tag " + tag.getName() + ": " + e.getMessage());
+                    }
                 } else {
-                    LogLevelManager.logDebug(COMPONENT_NAME, "Aucune company associée au tag: " + tag.getName());
+                    LogLevelManager.logDebug(COMPONENT_NAME, "Persistance désactivée au niveau du tag pour " + tag.getName() + " (persistenceEnable: " + tag.getPersistenceEnable() + ")");
                 }
-
-                updateHistoryValue(history, data.value());
-                history.setvStamp(LocalDateTime.ofInstant(Instant.ofEpochMilli(data.timestamp()), ZoneId.systemDefault()));
-                em.persist(history);
-
-                LogLevelManager.logTrace(COMPONENT_NAME, "Entrée historique créée pour tag: " + tag.getName());
+                // === FIN LOGIQUE DE PERSISTANCE CONDITIONNELLE ===
 
             } else {
                 LogLevelManager.logError(COMPONENT_NAME, "Tag avec ID " + data.tagId() + " non trouvé en base de données");

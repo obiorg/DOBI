@@ -6,6 +6,7 @@ import org.dobi.entities.Machine;
 import org.dobi.kafka.producer.KafkaProducerService;
 import org.dobi.logging.LogLevelManager;
 import org.dobi.logging.LogLevelManager.LogLevel;
+import java.util.Optional; // Ajouté
 
 public class MachineCollector implements Runnable {
 
@@ -17,6 +18,7 @@ public class MachineCollector implements Runnable {
     private final KafkaProducerService kafkaProducerService;
     private volatile String currentStatus = "Initialisation...";
     private long tagsReadCount = 0;
+    private int effectiveCollectionInterval = 5000; // Intervalle de collecte effectif en ms (par défaut 5s)
 
     public MachineCollector(Machine machine, IDriver driver, KafkaProducerService kps) {
         this.machine = machine;
@@ -33,6 +35,9 @@ public class MachineCollector implements Runnable {
         driver.configure(machine);
         
         while (running) {
+            // Recalculer l'intervalle de collecte à chaque cycle pour s'adapter aux changements de tag.cycle
+            recalculateCollectionInterval();
+
             try {
                 // Étape 1 : Assurer la connexion au début de chaque cycle
                 if (!driver.isConnected()) {
@@ -60,7 +65,7 @@ public class MachineCollector implements Runnable {
                 
                 if (machine.getTags() != null && !machine.getTags().isEmpty()) {
                     LogLevelManager.logDebug(COMPONENT_NAME, "Début cycle de lecture pour " + machine.getName() + 
-                                         " (" + machine.getTags().size() + " tags actifs)");
+                                         " (" + machine.getTags().size() + " tags configurés)");
                     
                     for (org.dobi.entities.Tag tag : machine.getTags()) {
                         if (!running) {
@@ -68,7 +73,8 @@ public class MachineCollector implements Runnable {
                             break; // Sortir si un arrêt est demandé
                         }
                         
-                        if (tag.isActive()) {
+                        // Condition modifiée : le tag doit être actif
+                        if (tag.isActive()) { 
                             try {
                                 LogLevelManager.logTrace(COMPONENT_NAME, "Lecture tag: " + tag.getName() + " (machine: " + machine.getName() + ")");
                                 
@@ -113,7 +119,8 @@ public class MachineCollector implements Runnable {
                                              " - " + tagsInCycle + " tags lus avec succès");
                     }
                     
-                    Thread.sleep(5000); // Attente normale entre les cycles
+                    // Utilisation de effectiveCollectionInterval pour le délai
+                    Thread.sleep(effectiveCollectionInterval); 
                 } else {
                     // Si une erreur de lecture a eu lieu, on attend un peu avant de retenter une connexion complète
                     updateStatus("Reconnexion...");
@@ -147,6 +154,30 @@ public class MachineCollector implements Runnable {
         }
     }
     
+    /**
+     * Recalcule l'intervalle de collecte effectif basé sur le plus petit cycle des tags actifs.
+     * Si aucun tag actif n'est configuré avec un cycle, utilise un défaut (ex: 5 secondes).
+     */
+    private void recalculateCollectionInterval() {
+        Optional<Integer> minCycle = Optional.empty();
+
+        if (machine.getTags() != null) {
+            minCycle = machine.getTags().stream()
+                .filter(org.dobi.entities.Tag::isActive) // Ne considérer que les tags actifs
+                .filter(tag -> tag.getCycle() != null && tag.getCycle() > 0) // Ne considérer que les cycles valides
+                .map(org.dobi.entities.Tag::getCycle)
+                .min(Integer::compare);
+        }
+
+        int newIntervalSeconds = minCycle.orElse(5); // Si aucun tag actif avec cycle, intervalle par défaut 5s
+        int newIntervalMs = newIntervalSeconds * 1000;
+
+        if (newIntervalMs != this.effectiveCollectionInterval) {
+            LogLevelManager.logInfo(COMPONENT_NAME, "Intervalle de collecte pour " + machine.getName() + " ajusté à " + newIntervalSeconds + "s.");
+            this.effectiveCollectionInterval = newIntervalMs;
+        }
+    }
+
     /**
      * Diagnostic spécifique pour OPC UA
      */
@@ -229,6 +260,8 @@ public class MachineCollector implements Runnable {
                                  " - Tags: " + oldTagCount + " → " + newTagCount);
             
             this.machine = updatedMachine;
+            // Après la mise à jour des tags, recalculer l'intervalle de collecte
+            recalculateCollectionInterval(); 
             
             if (newTagCount > oldTagCount) {
                 LogLevelManager.logInfo(COMPONENT_NAME, (newTagCount - oldTagCount) + 
@@ -307,13 +340,14 @@ public class MachineCollector implements Runnable {
     public String getDiagnosticInfo() {
         StringBuilder info = new StringBuilder();
         info.append("=== Diagnostic Collecteur ===\n");
-        info.append("Machine: ").append(machine.getName()).append(" (ID: ").append(machine.getId()).append(")\n");
+        info.append("Machine: ").append(machine != null ? machine.getName() : "Non configurée").append(" (ID: ").append(machine.getId()).append(")\n");
         info.append("Driver: ").append(getDriverType()).append("\n");
         info.append("Statut: ").append(currentStatus).append("\n");
         info.append("En cours d'exécution: ").append(running).append("\n");
         info.append("Tags lus (total): ").append(tagsReadCount).append("\n");
         info.append("Tags configurés: ").append(getCurrentTagCount()).append("\n");
         info.append("Driver connecté: ").append(driver != null ? driver.isConnected() : "N/A").append("\n");
+        info.append("Intervalle de collecte effectif: ").append(effectiveCollectionInterval / 1000).append("s\n"); // Ajouté
         
         // Informations sur la machine
         if (machine != null) {
