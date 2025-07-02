@@ -13,6 +13,7 @@
     <class>org.dobi.entities.Tag</class>
     <class>org.dobi.entities.TagType</class>
     <class>org.dobi.entities.TagMemory</class>
+    <class>org.dobi.entities.Persistence</class>
     <class>org.dobi.entities.PersStandard</class>
 
     <properties>
