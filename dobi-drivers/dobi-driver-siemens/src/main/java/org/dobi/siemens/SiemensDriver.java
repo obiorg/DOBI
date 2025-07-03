@@ -597,14 +597,14 @@ public class SiemensDriver implements IDriver {
                     return boolResult;
                 case "BYTE":
                 case "SINT":
-                    return buffer[0];
                 case "USINT":
-                    return buffer[0] & 0xFF;
+                    return buffer[0];
                 case "WORD":
-                    return S7.GetWordAt(buffer, 0);
-                case "INT":
+//                case "UINT":
+//                    return S7.GetWordAt(buffer, 0);
+                case "INT":                     // Cas spécifique pour INT (Short)
                     return S7.GetShortAt(buffer, 0);
-                case "UINT":
+                case "UINT": // Cas spécifique pour UINT (Word)
                     return S7.GetWordAt(buffer, 0) & 0xFFFF;
                 case "DWORD":
                     return S7.GetDWordAt(buffer, 0);
@@ -682,6 +682,7 @@ public class SiemensDriver implements IDriver {
             case "DB":
                 return S7.S7AreaDB;
             case "M":
+            case "MK": // AJOUTÉ : Reconnaître "MK" pour Merkers
                 return S7.S7AreaMK;
             case "E":
             case "I":

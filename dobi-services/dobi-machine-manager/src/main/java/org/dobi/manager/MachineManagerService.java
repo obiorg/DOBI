@@ -66,7 +66,8 @@ public class MachineManagerService {
             }
             appProperties.load(input);
             LogLevelManager.logDebug(COMPONENT_NAME, "Propriétés application chargées");
-        } catch (Exception ex) {
+        }
+        catch (Exception ex) {
             LogLevelManager.logError(COMPONENT_NAME, "Erreur chargement application.properties: " + ex.getMessage());
         }
     }
@@ -79,7 +80,8 @@ public class MachineManagerService {
             }
             driverProperties.load(input);
             LogLevelManager.logDebug(COMPONENT_NAME, "Propriétés drivers chargées");
-        } catch (Exception ex) {
+        }
+        catch (Exception ex) {
             LogLevelManager.logError(COMPONENT_NAME, "Erreur chargement drivers.properties: " + ex.getMessage());
         }
     }
@@ -590,7 +592,7 @@ public class MachineManagerService {
     }
 
     /**
-     * Obtient un rapport global des alarmes du système
+     * Obtient un rapport global d'alarmes du système
      */
     public String getSystemAlarmReport() {
         StringBuilder report = new StringBuilder();
@@ -667,13 +669,14 @@ public class MachineManagerService {
     public List<Machine> getMachinesFromDb() {
         EntityManager em = emf.createEntityManager();
         try {
+            // Modification de la requête : retirer le filtre t.active = true
+            // pour que MachineCollector puisse gérer la logique de cycle et d'activité.
             return em.createQuery(
                     "SELECT DISTINCT m FROM Machine m "
                     + "JOIN FETCH m.driver "
-                    + "LEFT JOIN FETCH m.tags t "
+                    + "LEFT JOIN FETCH m.tags t " // Retiré la condition WHERE t.active = true OR t IS NULL
                     + "LEFT JOIN FETCH t.type "
-                    + "LEFT JOIN FETCH t.memory "
-                    + "WHERE t.active = true OR t IS NULL",
+                    + "LEFT JOIN FETCH t.memory ", // Retiré la condition WHERE t.active = true OR t IS NULL
                     Machine.class
             ).getResultList();
         } finally {
@@ -926,7 +929,7 @@ public class MachineManagerService {
     /**
      * Vérifie si un collecteur utilise un driver spécifique
      *
-     * @param collector Le collecteur à vérifier
+     * @param collector La collecteur à vérifier
      * @param driverClass La classe du driver recherché
      * @return true si le collecteur utilise ce type de driver
      */
