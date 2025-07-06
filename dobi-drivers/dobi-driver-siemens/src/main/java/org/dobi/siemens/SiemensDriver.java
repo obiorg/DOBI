@@ -20,8 +20,8 @@ public class SiemensDriver implements IDriver {
 
     // Constantes de configuration
     private static final int DEFAULT_CONNECTION_TIMEOUT = 5000; // 5 secondes
-    private static final int DEFAULT_READ_TIMEOUT = 3000; // 3 secondes
-    private static final int DEFAULT_WRITE_TIMEOUT = 3000; // 3 secondes
+    private static final int DEFAULT_READ_TIMEOUT = 10000; // AUGMENTÉ: 10 secondes
+    private static final int DEFAULT_WRITE_TIMEOUT = 10000; // AUGMENTÉ: 10 secondes
     private static final int RECONNECT_DELAY_MS = 3000;
     private static final int MAX_RECONNECT_ATTEMPTS = 5;
     private static final int MAX_BATCH_SIZE = 20; // Limite pour éviter les timeouts
@@ -83,6 +83,10 @@ public class SiemensDriver implements IDriver {
 
     private void loadConfiguration() {
         if (machine != null) {
+            // Ici, vous pourriez charger des timeouts spécifiques à la machine si elles étaient définies dans la DB
+            // Par exemple:
+            // if (machine.getReadTimeout() != null) this.readTimeout = machine.getReadTimeout();
+            // if (machine.getWriteTimeout() != null) this.writeTimeout = machine.getWriteTimeout();
             LogLevelManager.logDebug(DRIVER_NAME, "Configuration chargée pour " + machine.getName());
         }
     }
@@ -248,6 +252,10 @@ public class SiemensDriver implements IDriver {
                     + "' (Area: " + getAreaName(memInfo.area) + ", DB: " + memInfo.dbNumber
                     + ", Offset: " + memInfo.byteAddress + ", Size: " + memInfo.bytesToRead + ")");
 
+            // Moka7 n'expose pas directement un timeout par opération de lecture/écriture.
+            // Les timeouts sont gérés au niveau de la socket TCP sous-jacente.
+            // L'augmentation des constantes DEFAULT_READ_TIMEOUT et DEFAULT_WRITE_TIMEOUT
+            // affectera les timeouts de connexion et, indirectement, la robustesse des opérations.
             int result = client.ReadArea(memInfo.area, memInfo.dbNumber,
                     memInfo.byteAddress, memInfo.bytesToRead, buffer);
 
@@ -600,9 +608,8 @@ public class SiemensDriver implements IDriver {
                 case "USINT":
                     return buffer[0];
                 case "WORD":
-//                case "UINT":
-//                    return S7.GetWordAt(buffer, 0);
-                case "INT":                     // Cas spécifique pour INT (Short)
+                    return S7.GetWordAt(buffer, 0);
+                case "INT": // Cas spécifique pour INT (Short)
                     return S7.GetShortAt(buffer, 0);
                 case "UINT": // Cas spécifique pour UINT (Word)
                     return S7.GetWordAt(buffer, 0) & 0xFFFF;
