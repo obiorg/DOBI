@@ -126,10 +126,10 @@ public class InfluxDBWriterService {
                     .time(tagData.timestamp(), WritePrecision.MS);
 
             // Correction: Toujours écrire les nombres comme des Double pour éviter les conflits de type
-            if (value instanceof Double) {
-                point.addField("value", (Double) value);
-            } else if (value instanceof Long) { // Si c'est un Long (entier), le convertir en Double
-                point.addField("value", ((Long) value).doubleValue());
+            // La méthode convertToInfluxDBValue est censée déjà faire cela, mais nous ajoutons
+            // une vérification ici pour être absolument certain que le type est compatible avec addField(String, Double)
+            if (value instanceof Number) { // Si c'est un nombre (Long ou Double après conversion)
+                point.addField("value", ((Number) value).doubleValue()); // Toujours le traiter comme un Double
             } else if (value instanceof Boolean) {
                 point.addField("value", (Boolean) value);
             } else if (value instanceof String) {
@@ -137,7 +137,7 @@ public class InfluxDBWriterService {
             } else {
                 // Fallback si le type n'est pas explicitement géré ci-dessus (ne devrait pas arriver si convertToInfluxDBValue est correct)
                 LogLevelManager.logWarn(COMPONENT_NAME, "Type de valeur inattendu après conversion pour InfluxDB: " + value.getClass().getName());
-                point.addField("value", value.toString());
+                point.addField("value", value.toString()); // Convertir en String comme dernier recours
             }
 
             writeApi.writePoint(point);
