@@ -115,9 +115,10 @@ public class InfluxDBWriterService {
 
         try {
             Object value = convertToInfluxDBValue(tagData.value());
+            // Correction: Si la valeur convertie est null, ne pas ajouter le champ 'value'
             if (value == null) {
-                LogLevelManager.logWarn(COMPONENT_NAME, "Valeur du tag '" + tagData.tagName() + "' non supportée pour InfluxDB. Ignorée.");
-                return;
+                LogLevelManager.logWarn(COMPONENT_NAME, "Valeur du tag '" + tagData.tagName() + "' non supportée ou non numérique après conversion. Point non écrit.");
+                return; // Ne pas écrire le point si la valeur est null après conversion
             }
 
             Point point = Point.measurement("tag_values")
@@ -125,21 +126,19 @@ public class InfluxDBWriterService {
                     .addTag("tag_name", tagData.tagName())
                     .time(tagData.timestamp(), WritePrecision.MS);
 
-            // Correction: Toujours écrire les nombres comme des Double pour éviter les conflits de type
-            // La méthode convertToInfluxDBValue est censée déjà faire cela, mais nous ajoutons
-            // une vérification ici pour être absolument certain que le type est compatible avec addField(String, Double)
-            if (value instanceof Double) { // Si c'est un Double (après conversion ou si c'était déjà un float/double)
+            // Correction: Utiliser addField avec le type correct
+            if (value instanceof Double) {
                 point.addField("value", (Double) value);
-            } else if (value instanceof Long) { // Si c'est un Long (entier), le convertir en Double
-                point.addField("value", ((Long) value).doubleValue());
             } else if (value instanceof Boolean) {
                 point.addField("value", (Boolean) value);
             } else if (value instanceof String) {
+                // Si c'est une String (et non un nombre parsable), l'ajouter comme String
                 point.addField("value", (String) value);
             } else {
-                // Fallback si le type n'est pas explicitement géré ci-dessus (ne devrait pas arriver si convertToInfluxDBValue est correct)
-                LogLevelManager.logWarn(COMPONENT_NAME, "Type de valeur inattendu après conversion pour InfluxDB: " + value.getClass().getName());
-                point.addField("value", value.toString()); // Convertir en String comme dernier recours
+                // Ce cas ne devrait pas se produire si convertToInfluxDBValue est correct,
+                // mais c'est une sécurité.
+                LogLevelManager.logWarn(COMPONENT_NAME, "Type de valeur inattendu après conversion pour InfluxDB: " + value.getClass().getName() + ". Tentative d'écriture en String.");
+                point.addField("value", value.toString());
             }
 
             writeApi.writePoint(point);
@@ -155,7 +154,8 @@ public class InfluxDBWriterService {
      * supporte les types : Long, Double, Boolean, String.
      *
      * @param value La valeur à convertir.
-     * @return La valeur convertie ou null si le type n'est pas supporté.
+     * @return La valeur convertie (Double, Boolean, String) ou null si le type
+     * n'est pas supporté.
      */
     private Object convertToInfluxDBValue(Object value) {
         if (value == null) {
@@ -164,22 +164,25 @@ public class InfluxDBWriterService {
         // Si la valeur est une instance de Number, la convertir en Double
         if (value instanceof Number) {
             return ((Number) value).doubleValue();
-        } // Si la valeur est une String, tenter de la convertir en Double ou Long
+        } // Si la valeur est une String, tenter de la convertir en Double.
+        // Si non numérique, la retourner comme String.
         else if (value instanceof String) {
             try {
                 // Tenter de parser comme un Double (pour les floats et les entiers)
                 return Double.parseDouble((String) value);
             } catch (NumberFormatException e) {
                 // Si ce n'est pas un nombre valide, le laisser comme String
-                return (String) value;
+                return (String) value; // Retourne la String originale
             }
         } // Autres types
         else if (value instanceof Boolean) {
             return (Boolean) value;
         } else if (value instanceof LocalDateTime) {
-            return ((LocalDateTime) value).atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli();
+            // Convertir LocalDateTime en timestamp Unix millisecondes
+            return (double) ((LocalDateTime) value).atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli(); // Retourne un Double
         } else if (value instanceof java.util.Date) {
-            return ((java.util.Date) value).getTime();
+            // Convertir java.util.Date en timestamp Unix millisecondes
+            return (double) ((java.util.Date) value).getTime(); // Retourne un Double
         }
         LogLevelManager.logWarn(COMPONENT_NAME, "Type de valeur non supporté pour InfluxDB: " + value.getClass().getName());
         return null;
