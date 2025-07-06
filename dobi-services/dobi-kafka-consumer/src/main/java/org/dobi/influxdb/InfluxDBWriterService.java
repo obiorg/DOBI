@@ -128,8 +128,10 @@ public class InfluxDBWriterService {
             // Correction: Toujours écrire les nombres comme des Double pour éviter les conflits de type
             // La méthode convertToInfluxDBValue est censée déjà faire cela, mais nous ajoutons
             // une vérification ici pour être absolument certain que le type est compatible avec addField(String, Double)
-            if (value instanceof Number) { // Si c'est un nombre (Long ou Double après conversion)
-                point.addField("value", ((Number) value).doubleValue()); // Toujours le traiter comme un Double
+            if (value instanceof Double) { // Si c'est un Double (après conversion ou si c'était déjà un float/double)
+                point.addField("value", (Double) value);
+            } else if (value instanceof Long) { // Si c'est un Long (entier), le convertir en Double
+                point.addField("value", ((Long) value).doubleValue());
             } else if (value instanceof Boolean) {
                 point.addField("value", (Boolean) value);
             } else if (value instanceof String) {
@@ -159,13 +161,21 @@ public class InfluxDBWriterService {
         if (value == null) {
             return null;
         }
+        // Si la valeur est une instance de Number, la convertir en Double
         if (value instanceof Number) {
-            // Correction: Convertir tous les nombres en Double pour éviter les conflits de type
             return ((Number) value).doubleValue();
-        } else if (value instanceof Boolean) {
+        } // Si la valeur est une String, tenter de la convertir en Double ou Long
+        else if (value instanceof String) {
+            try {
+                // Tenter de parser comme un Double (pour les floats et les entiers)
+                return Double.parseDouble((String) value);
+            } catch (NumberFormatException e) {
+                // Si ce n'est pas un nombre valide, le laisser comme String
+                return (String) value;
+            }
+        } // Autres types
+        else if (value instanceof Boolean) {
             return (Boolean) value;
-        } else if (value instanceof String) {
-            return (String) value;
         } else if (value instanceof LocalDateTime) {
             return ((LocalDateTime) value).atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli();
         } else if (value instanceof java.util.Date) {
