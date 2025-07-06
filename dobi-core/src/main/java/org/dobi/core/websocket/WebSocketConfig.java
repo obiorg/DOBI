@@ -1,53 +1,41 @@
-package org.dobi.core.websocket;
+    package org.dobi.core.websocket; // Nouveau package après déplacement
 
-import org.dobi.logging.LogLevelManager;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.messaging.simp.config.MessageBrokerRegistry;
-import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
-import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
-import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
+    import org.dobi.logging.LogLevelManager;
+    import org.springframework.context.annotation.Configuration;
+    import org.springframework.messaging.simp.config.MessageBrokerRegistry;
+    import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
+    import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
+    import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
 
-@Configuration
-@EnableWebSocketMessageBroker // Active la gestion des messages WebSocket via un broker
-public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
+    @Configuration
+    @EnableWebSocketMessageBroker
+    public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
-    private static final String COMPONENT_NAME = "CORE-WEBSOCKET-CONFIG";
+        private static final String COMPONENT_NAME = "CORE-WEBSOCKET-CONFIG";
 
-    /**
-     * Configure le broker de messages. Un broker est responsable de router les
-     * messages d'un client à l'autre.
-     *
-     * @param config Le registre du broker de messages.
-     */
-    @Override
-    public void configureMessageBroker(MessageBrokerRegistry config) {
-        // Active un broker de messages en mémoire simple.
-        // Les messages dont la destination commence par "/topic" seront routés vers ce broker.
-        config.enableSimpleBroker("/topic");
+        @Override
+        public void configureMessageBroker(MessageBrokerRegistry config) {
+            config.enableSimpleBroker("/topic");
+            config.setApplicationDestinationPrefixes("/app");
+            
+            LogLevelManager.logInfo(COMPONENT_NAME, "Broker de messages WebSocket configuré. Destinations: /topic, Préfixe application: /app.");
+        }
 
-        // Définit le préfixe pour les messages destinés aux méthodes annotées avec @MessageMapping.
-        // Les clients enverront des messages à des destinations comme "/app/hello".
-        config.setApplicationDestinationPrefixes("/app");
-
-        LogLevelManager.logInfo(COMPONENT_NAME, "Broker de messages WebSocket configuré. Destinations: /topic, Préfixe application: /app.");
+        @Override
+        public void registerStompEndpoints(StompEndpointRegistry registry) {
+            // Enregistre l'endpoint "/ws-dobi".
+            // .withSockJS() est ajouté pour la compatibilité.
+            // .setAllowedOrigins("*") est CRUCIAL ici pour CORS sur l'endpoint SockJS.
+            // Pour la production, remplacez "*" par les origines spécifiques de votre frontend.
+            registry.addEndpoint("/ws-dobi")
+                    .setAllowedOrigins(
+                        "http://localhost",       // Pour les tests locaux via un serveur web
+                        "http://10.242.14.3",     // Pour l'accès direct via l'IP de votre serveur DOBI
+                        "null"                    // Pour les fichiers HTML ouverts directement depuis le système de fichiers (origin est 'null')
+                    )
+                    .withSockJS();
+            
+            LogLevelManager.logInfo(COMPONENT_NAME, "Endpoint WebSocket STOMP enregistré: /ws-dobi (avec SockJS et CORS configuré).");
+        }
     }
-
-    /**
-     * Enregistre les endpoints STOMP. Les endpoints sont les URLs auxquelles
-     * les clients WebSocket se connecteront.
-     *
-     * @param registry Le registre des endpoints STOMP.
-     */
-    @Override
-    public void registerStompEndpoints(StompEndpointRegistry registry) {
-        // Enregistre l'endpoint "/ws-dobi".
-        // Les clients se connecteront à ws://localhost:8080/ws-dobi.
-        // .withSockJS() est ajouté pour la compatibilité avec les navigateurs plus anciens ou les environnements qui ne supportent pas nativement les WebSockets.
-        registry.addEndpoint("/ws-dobi").withSockJS();
-
-        // Vous pouvez ajouter d'autres endpoints si nécessaire, par exemple sans SockJS
-        // registry.addEndpoint("/ws-dobi-native");
-        LogLevelManager.logInfo(COMPONENT_NAME, "Endpoint WebSocket STOMP enregistré: /ws-dobi (avec SockJS).");
-    }
-}
-
+    
