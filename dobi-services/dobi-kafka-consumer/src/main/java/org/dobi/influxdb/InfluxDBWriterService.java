@@ -125,15 +125,17 @@ public class InfluxDBWriterService {
                     .addTag("tag_name", tagData.tagName())
                     .time(tagData.timestamp(), WritePrecision.MS);
 
-            if (value instanceof Long) {
-                point.addField("value", (Long) value);
-            } else if (value instanceof Double) {
+            // Correction: Toujours écrire les nombres comme des Double pour éviter les conflits de type
+            if (value instanceof Double) {
                 point.addField("value", (Double) value);
+            } else if (value instanceof Long) { // Si c'est un Long (entier), le convertir en Double
+                point.addField("value", ((Long) value).doubleValue());
             } else if (value instanceof Boolean) {
                 point.addField("value", (Boolean) value);
             } else if (value instanceof String) {
                 point.addField("value", (String) value);
             } else {
+                // Fallback si le type n'est pas explicitement géré ci-dessus (ne devrait pas arriver si convertToInfluxDBValue est correct)
                 LogLevelManager.logWarn(COMPONENT_NAME, "Type de valeur inattendu après conversion pour InfluxDB: " + value.getClass().getName());
                 point.addField("value", value.toString());
             }
@@ -158,11 +160,8 @@ public class InfluxDBWriterService {
             return null;
         }
         if (value instanceof Number) {
-            if (value instanceof Integer || value instanceof Long || value instanceof Short || value instanceof Byte) {
-                return ((Number) value).longValue();
-            } else if (value instanceof Float || value instanceof Double) {
-                return ((Number) value).doubleValue();
-            }
+            // Correction: Convertir tous les nombres en Double pour éviter les conflits de type
+            return ((Number) value).doubleValue();
         } else if (value instanceof Boolean) {
             return (Boolean) value;
         } else if (value instanceof String) {
