@@ -47,7 +47,7 @@ public class InfluxDBWriterService {
                 + ", Token=" + (token != null && !token.isEmpty() ? "******" : "NONE/null"));
 
         // Validation des propriétés avant de tenter la connexion
-        if (url == null || url.isEmpty() || token == null || token.isEmpty() || org == null || org.isEmpty() || bucket == null || bucket.isEmpty()) {
+        if (url == null || url.isEmpty() || token == null || token.isEmpty() || org == null || org.isEmpty() || bucket == null || bucket == null) {
             LogLevelManager.logError(COMPONENT_NAME, "Propriétés de connexion InfluxDB manquantes ou invalides. Impossible d'initialiser le client.");
             this.influxDBClient = null;
             this.writeApi = null;
@@ -58,21 +58,20 @@ public class InfluxDBWriterService {
             // Crée le client InfluxDB
             this.influxDBClient = InfluxDBClientFactory.create(url, token.toCharArray(), org, bucket);
 
-            // Vérifie si le client a été créé avec succès (peut être null si les propriétés sont invalides ou si la connexion échoue silencieusement)
+            // AJOUTÉ: Vérification explicite si le client est null après la création
             if (this.influxDBClient == null) {
-                // Cette condition devrait être déclenchée si InfluxDBClientFactory.create échoue sans exception
-                LogLevelManager.logError(COMPONENT_NAME, "InfluxDBClientFactory.create a retourné un client null. Vérifiez l'URL, l'organisation et le token.");
-                this.writeApi = null; // Assurez-vous que writeApi est null
-                return;
+                LogLevelManager.logError(COMPONENT_NAME, "InfluxDBClientFactory.create a retourné un client null. Cela peut indiquer un problème avec l'URL ou les paramètres de connexion.");
+                this.writeApi = null; // S'assurer que writeApi est null
+                return; // Sortir
             }
 
             // Tente d'obtenir l'API d'écriture
             this.writeApi = this.influxDBClient.getWriteApiBlocking();
 
-            // Vérifie si writeApi est null (cela ne devrait pas arriver si getWriteApiBlocking ne lance pas d'exception mais retourne null)
+            // AJOUTÉ: Vérification explicite si writeApi est null après l'appel
             if (this.writeApi == null) {
-                LogLevelManager.logError(COMPONENT_NAME, "influxDBClient.getWriteApiBlocking a retourné null. Le client InfluxDB n'a peut-être pas été correctement initialisé.");
-                return;
+                LogLevelManager.logError(COMPONENT_NAME, "influxDBClient.getWriteApiBlocking a retourné null. Le client InfluxDB n'a peut-être pas été correctement initialisé ou la connexion a échoué silencieusement.");
+                return; // Sortir
             }
 
             LogLevelManager.logInfo(COMPONENT_NAME, "Connexion à InfluxDB établie avec succès.");
@@ -84,11 +83,22 @@ public class InfluxDBWriterService {
         } catch (Exception e) {
             // Log l'exception détaillée
             LogLevelManager.logError(COMPONENT_NAME, "Échec de la connexion ou de l'initialisation d'InfluxDB: " + e.getMessage());
-            // AJOUTÉ: Imprime la stack trace complète pour un diagnostic plus précis
+            // Imprime la stack trace complète pour un diagnostic plus précis
             e.printStackTrace();
             // Assurez-vous que les objets sont null en cas d'échec
             this.influxDBClient = null;
             this.writeApi = null;
+        } finally {
+            // AJOUTÉ: S'assurer de fermer le client si l'API d'écriture n'a pas pu être initialisée
+            // mais que le client a été créé. Cela libère les ressources.
+            if (this.influxDBClient != null && this.writeApi == null) {
+                try {
+                    this.influxDBClient.close();
+                    LogLevelManager.logDebug(COMPONENT_NAME, "Client InfluxDB fermé après échec d'initialisation de WriteApi.");
+                } catch (Exception closeEx) {
+                    LogLevelManager.logError(COMPONENT_NAME, "Erreur lors de la fermeture du client InfluxDB après échec d'initialisation de WriteApi: " + closeEx.getMessage());
+                }
+            }
         }
     }
 
@@ -180,7 +190,7 @@ public class InfluxDBWriterService {
         }
     }
 
-    // AJOUTÉ: Getter pour l'API d'écriture, utile pour le diagnostic
+    // Getter pour l'API d'écriture, utile pour le diagnostic
     public WriteApiBlocking getWriteApiBlocking() {
         return this.writeApi;
     }
