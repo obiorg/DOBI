@@ -4,11 +4,12 @@ import org.dobi.kafka.consumer.KafkaConsumerService;
 import org.dobi.manager.MachineManagerService;
 import org.dobi.kafka.manager.KafkaManagerService;
 import org.dobi.influxdb.InfluxDBWriterService;
-import org.dobi.influxdb.InfluxDBReaderService; // Ajouté pour le service de lecture
+import org.dobi.influxdb.InfluxDBReaderService;
+import org.dobi.logging.LogLevelManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
-import org.dobi.logging.LogLevelManager;
+import org.dobi.app.controller.TagWebSocketController; // Ajouté
 
 @Configuration
 @ComponentScan(basePackages = {"org.dobi.manager", "org.dobi.app.service", "org.dobi.app.controller", "org.dobi.influxdb"})
@@ -22,7 +23,7 @@ public class DobiServiceConfiguration {
     }
 
     @Bean
-    public KafkaConsumerService kafkaConsumerService(MachineManagerService machineManagerService, InfluxDBWriterService influxDBWriterService) {
+    public KafkaConsumerService kafkaConsumerService(MachineManagerService machineManagerService, InfluxDBWriterService influxDBWriterService, TagWebSocketController tagWebSocketController) { // Modifié pour injecter TagWebSocketController
         machineManagerService.initializeKafka();
 
         influxDBWriterService.initialize();
@@ -38,7 +39,8 @@ public class DobiServiceConfiguration {
                 "dobi-persistence-group",
                 machineManagerService.getAppProperty("kafka.topic.tags.data"),
                 machineManagerService.getEmf(),
-                influxDBWriterService
+                influxDBWriterService,
+                tagWebSocketController // Passé le contrôleur WebSocket au consommateur Kafka
         );
     }
 
@@ -81,7 +83,7 @@ public class DobiServiceConfiguration {
         return new InfluxDBWriterService(influxdbUrl, influxdbToken, influxdbOrg, influxdbBucket);
     }
 
-    @Bean // Nouveau bean pour le service de lecture InfluxDB
+    @Bean
     public InfluxDBReaderService influxDBReaderService(MachineManagerService machineManagerService) {
         String influxdbUrl = machineManagerService.getAppProperty("influxdb.url");
         String influxdbToken = machineManagerService.getAppProperty("influxdb.token");
@@ -89,9 +91,9 @@ public class DobiServiceConfiguration {
         String influxdbBucket = machineManagerService.getAppProperty("influxdb.bucket");
 
         InfluxDBReaderService readerService = new InfluxDBReaderService(influxdbUrl, influxdbToken, influxdbOrg, influxdbBucket);
-        readerService.initialize(); // Initialiser le service de lecture
+        readerService.initialize();
 
-        if (readerService.getInfluxDBClient() == null) { // Vérification de l'initialisation du client interne
+        if (readerService.getInfluxDBClient() == null) {
             LogLevelManager.logError("SPRING-CONFIG", "InfluxDBReaderService n'a pas pu initialiser son client. Les lectures InfluxDB échoueront.");
         } else {
             LogLevelManager.logInfo("SPRING-CONFIG", "InfluxDBReaderService a initialisé son client avec succès.");

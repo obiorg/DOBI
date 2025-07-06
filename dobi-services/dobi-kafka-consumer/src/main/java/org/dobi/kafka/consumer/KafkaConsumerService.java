@@ -14,7 +14,10 @@ import org.dobi.dto.TagData;
 import org.dobi.entities.PersStandard;
 import org.dobi.entities.Tag;
 import org.dobi.entities.Persistence;
-import org.dobi.influxdb.InfluxDBWriterService; // Ajouté
+import org.dobi.influxdb.InfluxDBWriterService;
+import org.dobi.logging.LogLevelManager;
+import org.dobi.logging.LogLevelManager.LogLevel;
+import org.dobi.app.controller.TagWebSocketController; // Ajouté pour le contrôleur WebSocket
 
 import java.time.Duration;
 import java.time.Instant;
@@ -22,9 +25,6 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Collections;
 import java.util.Properties;
-
-import org.dobi.logging.LogLevelManager;
-import org.dobi.logging.LogLevelManager.LogLevel;
 
 public class KafkaConsumerService implements Runnable {
 
@@ -35,13 +35,15 @@ public class KafkaConsumerService implements Runnable {
     private final EntityManagerFactory emf;
     private volatile boolean running = true;
 
-    private final String bootstrapServers; // Déclaration unique
+    private final String bootstrapServers;
     private final InfluxDBWriterService influxDBWriterService;
+    private final TagWebSocketController tagWebSocketController; // Ajouté
 
-    public KafkaConsumerService(String bootstrapServers, String groupId, String topic, EntityManagerFactory emf, InfluxDBWriterService influxDBWriterService) {
+    public KafkaConsumerService(String bootstrapServers, String groupId, String topic, EntityManagerFactory emf, InfluxDBWriterService influxDBWriterService, TagWebSocketController tagWebSocketController) { // Modifié le constructeur
         this.emf = emf;
         this.bootstrapServers = bootstrapServers;
         this.influxDBWriterService = influxDBWriterService;
+        this.tagWebSocketController = tagWebSocketController; // Initialisé
 
         LogLevelManager.logInfo(COMPONENT_NAME, "Initialisation du consommateur Kafka");
         LogLevelManager.logDebug(COMPONENT_NAME, "Configuration - Servers: " + bootstrapServers
@@ -219,6 +221,16 @@ public class KafkaConsumerService implements Runnable {
                     LogLevelManager.logWarn(COMPONENT_NAME, "InfluxDBWriterService non disponible. Les données ne seront pas écrites dans InfluxDB.");
                 }
                 // === FIN ÉCRITURE VERS INFLUXDB ===
+
+                // === DIFFUSION VIA WEBSOCKET (AJOUTÉ) ===
+                if (tagWebSocketController != null) {
+                    tagWebSocketController.sendTagUpdate(data); // Diffuse la mise à jour du tag
+                    // Ou pour un topic spécifique au tag:
+                    // tagWebSocketController.sendSpecificTagUpdate(data);
+                } else {
+                    LogLevelManager.logWarn(COMPONENT_NAME, "TagWebSocketController non disponible. Les mises à jour de tags ne seront pas diffusées via WebSocket.");
+                }
+                // === FIN DIFFUSION VIA WEBSOCKET ===
 
             } else {
                 LogLevelManager.logError(COMPONENT_NAME, "Tag avec ID " + data.tagId() + " non trouvé en base de données");

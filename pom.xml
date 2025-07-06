@@ -62,7 +62,7 @@
                 <artifactId>sdk-client</artifactId>
                 <version>0.6.11</version>
             </dependency>
-<!--             Logging 
+            <!--             Logging 
             <dependency>
                 <groupId>org.slf4j</groupId>
                 <artifactId>slf4j-api</artifactId>
@@ -75,6 +75,16 @@
                 <artifactId>junit-jupiter</artifactId>
                 <scope>test</scope>
             </dependency>-->
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-websocket</artifactId>
+                <version>3.2.5</version>  
+            </dependency>
+            <dependency>
+                <groupId>org.springframework</groupId>
+                <artifactId>spring-messaging</artifactId>
+                <version>6.1.6</version>  
+            </dependency>
         </dependencies>
     </dependencyManagement>
  

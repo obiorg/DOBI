@@ -70,6 +70,19 @@
             <artifactId>dobi-driver-profinet</artifactId>
             <version>${project.version}</version>
         </dependency>    
+        
+        <!-- Dépendances Spring Boot pour WebSocket (AJOUTÉ) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-websocket</artifactId>
+            <version>3.2.5</version> <!-- Assurez-vous que la version correspond à votre version de Spring Boot -->
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-messaging</artifactId>
+            <version>6.1.6</version> <!-- Assurez-vous que la version correspond à votre version de Spring Boot -->
+        </dependency>
+
     </dependencies>
 
     <build>
