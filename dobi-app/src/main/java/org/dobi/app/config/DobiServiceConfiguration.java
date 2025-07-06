@@ -4,6 +4,7 @@ import org.dobi.kafka.consumer.KafkaConsumerService;
 import org.dobi.manager.MachineManagerService;
 import org.dobi.kafka.manager.KafkaManagerService;
 import org.dobi.influxdb.InfluxDBWriterService;
+import org.dobi.logging.LogLevelManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
@@ -14,6 +15,9 @@ import org.springframework.context.annotation.Configuration;
 @ComponentScan(basePackages = {"org.dobi.manager", "org.dobi.app.service", "org.dobi.app.controller", "org.dobi.influxdb"})
 public class DobiServiceConfiguration {
 
+    
+    private static final String COMPONENT_NAME = "DOBI-SERVICE-CONFIGURATION";
+    
     @Bean
     public MachineManagerService machineManagerService() {
         return new MachineManagerService();
@@ -48,6 +52,31 @@ public class DobiServiceConfiguration {
         String influxdbToken = machineManagerService.getAppProperty("influxdb.token");
         String influxdbOrg = machineManagerService.getAppProperty("influxdb.org");
         String influxdbBucket = machineManagerService.getAppProperty("influxdb.bucket");
+
+        // Validation des propriétés ici
+        if (influxdbUrl == null || influxdbUrl.isEmpty()
+                || influxdbToken == null || influxdbToken.isEmpty()
+                || influxdbOrg == null || influxdbOrg.isEmpty()
+                || influxdbBucket == null || influxdbBucket.isEmpty()) {
+
+            LogLevelManager.logError("SPRING-CONFIG", "Propriétés InfluxDB manquantes ou vides dans application.properties. Le service InfluxDBWriterService ne sera pas opérationnel.");
+
+            // Retourne une implémentation "No-Op" pour éviter les NPE et permettre à l'application de démarrer
+            return new InfluxDBWriterService("invalid_url", "invalid_token", "invalid_org", "invalid_bucket") {
+                @Override
+                public void initialize() {
+                    /* Ne fait rien, car le service est non-opérationnel */ }
+
+                @Override
+                public void writeTagData(org.dobi.dto.TagData tagData) {
+                    LogLevelManager.logWarn(COMPONENT_NAME, "Tentative d'écriture vers un InfluxDBWriterService non initialisé (propriétés manquantes). Données non écrites pour " + tagData.tagName() + ".");
+                }
+
+                @Override
+                public void close() {
+                    /* Ne fait rien */ }
+            };
+        }
 
         return new InfluxDBWriterService(influxdbUrl, influxdbToken, influxdbOrg, influxdbBucket);
     }
