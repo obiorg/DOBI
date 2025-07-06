@@ -9,7 +9,7 @@ import org.dobi.logging.LogLevelManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
-import org.dobi.app.controller.TagWebSocketController; // Ajouté
+import org.dobi.core.websocket.TagWebSocketController; // Ajouté
 
 @Configuration
 @ComponentScan(basePackages = {"org.dobi.manager", "org.dobi.app.service", "org.dobi.app.controller", "org.dobi.influxdb"})
@@ -102,3 +102,4 @@ public class DobiServiceConfiguration {
         return readerService;
     }
 }
+

@@ -1,4 +1,4 @@
-package org.dobi.app.controller;
+package org.dobi.core.websocket;
 
 import org.dobi.dto.TagData; // Assurez-vous que TagData est accessible (via dobi-core)
 import org.dobi.logging.LogLevelManager;
@@ -14,7 +14,7 @@ import org.springframework.stereotype.Controller;
 @Controller
 public class TagWebSocketController {
 
-    private static final String COMPONENT_NAME = "TAG-WEBSOCKET";
+    private static final String COMPONENT_NAME = "CORE-TAG-WEBSOCKET";
     private final SimpMessagingTemplate messagingTemplate; // Utilisé pour envoyer des messages aux clients
 
     public TagWebSocketController(SimpMessagingTemplate messagingTemplate) {
@@ -63,3 +63,4 @@ public class TagWebSocketController {
         LogLevelManager.logTrace(COMPONENT_NAME, "Mise à jour tag spécifique envoyée via WebSocket à " + destination + ": " + tagData.tagName() + " = " + tagData.value());
     }
 }
+

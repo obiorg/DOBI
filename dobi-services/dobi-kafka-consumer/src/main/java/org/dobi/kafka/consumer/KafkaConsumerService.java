@@ -17,7 +17,7 @@ import org.dobi.entities.Persistence;
 import org.dobi.influxdb.InfluxDBWriterService;
 import org.dobi.logging.LogLevelManager;
 import org.dobi.logging.LogLevelManager.LogLevel;
-import org.dobi.app.controller.TagWebSocketController; // Ajouté pour le contrôleur WebSocket
+import org.dobi.core.websocket.TagWebSocketController; // Ajouté pour le contrôleur WebSocket
 
 import java.time.Duration;
 import java.time.Instant;
@@ -310,3 +310,4 @@ public class KafkaConsumerService implements Runnable {
         }
     }
 }
+

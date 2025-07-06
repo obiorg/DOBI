@@ -1,4 +1,4 @@
-package org.dobi.app.config;
+package org.dobi.core.websocket;
 
 import org.dobi.logging.LogLevelManager;
 import org.springframework.context.annotation.Configuration;
@@ -11,7 +11,7 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 @EnableWebSocketMessageBroker // Active la gestion des messages WebSocket via un broker
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
-    private static final String COMPONENT_NAME = "WEBSOCKET-CONFIG";
+    private static final String COMPONENT_NAME = "CORE-WEBSOCKET-CONFIG";
 
     /**
      * Configure le broker de messages. Un broker est responsable de router les
@@ -50,3 +50,4 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         LogLevelManager.logInfo(COMPONENT_NAME, "Endpoint WebSocket STOMP enregistré: /ws-dobi (avec SockJS).");
     }
 }
+
