@@ -58,17 +58,21 @@ public class InfluxDBWriterService {
             // Crée le client InfluxDB
             this.influxDBClient = InfluxDBClientFactory.create(url, token.toCharArray(), org, bucket);
 
-            // Vérifie si le client a été créé avec succès (peut être null si les propriétés sont invalides)
+            // Vérifie si le client a été créé avec succès (peut être null si les propriétés sont invalides ou si la connexion échoue silencieusement)
             if (this.influxDBClient == null) {
-                throw new IllegalStateException("InfluxDBClientFactory.create a retourné un client null. Vérifiez l'URL, l'organisation et le token.");
+                // Cette condition devrait être déclenchée si InfluxDBClientFactory.create échoue sans exception
+                LogLevelManager.logError(COMPONENT_NAME, "InfluxDBClientFactory.create a retourné un client null. Vérifiez l'URL, l'organisation et le token.");
+                this.writeApi = null; // Assurez-vous que writeApi est null
+                return;
             }
 
             // Tente d'obtenir l'API d'écriture
             this.writeApi = this.influxDBClient.getWriteApiBlocking();
 
-            // Vérifie si writeApi est null (cela ne devrait pas arriver si getWriteApiBlocking ne lance pas d'exception)
+            // Vérifie si writeApi est null (cela ne devrait pas arriver si getWriteApiBlocking ne lance pas d'exception mais retourne null)
             if (this.writeApi == null) {
-                throw new IllegalStateException("influxDBClient.getWriteApiBlocking a retourné null. Le client InfluxDB n'a peut-être pas été correctement initialisé.");
+                LogLevelManager.logError(COMPONENT_NAME, "influxDBClient.getWriteApiBlocking a retourné null. Le client InfluxDB n'a peut-être pas été correctement initialisé.");
+                return;
             }
 
             LogLevelManager.logInfo(COMPONENT_NAME, "Connexion à InfluxDB établie avec succès.");
@@ -80,6 +84,8 @@ public class InfluxDBWriterService {
         } catch (Exception e) {
             // Log l'exception détaillée
             LogLevelManager.logError(COMPONENT_NAME, "Échec de la connexion ou de l'initialisation d'InfluxDB: " + e.getMessage());
+            // AJOUTÉ: Imprime la stack trace complète pour un diagnostic plus précis
+            e.printStackTrace();
             // Assurez-vous que les objets sont null en cas d'échec
             this.influxDBClient = null;
             this.writeApi = null;
@@ -109,7 +115,6 @@ public class InfluxDBWriterService {
                     .addTag("tag_name", tagData.tagName())
                     .time(tagData.timestamp(), WritePrecision.MS);
 
-            // Correction: Utiliser addField avec le type correct
             if (value instanceof Long) {
                 point.addField("value", (Long) value);
             } else if (value instanceof Double) {
@@ -119,9 +124,8 @@ public class InfluxDBWriterService {
             } else if (value instanceof String) {
                 point.addField("value", (String) value);
             } else {
-                // Fallback si le type n'est pas explicitement géré ci-dessus (ne devrait pas arriver si convertToInfluxDBValue est correct)
                 LogLevelManager.logWarn(COMPONENT_NAME, "Type de valeur inattendu après conversion pour InfluxDB: " + value.getClass().getName());
-                point.addField("value", value.toString()); // Convertir en String comme dernier recours
+                point.addField("value", value.toString());
             }
 
             writeApi.writePoint(point);
@@ -174,5 +178,10 @@ public class InfluxDBWriterService {
                 LogLevelManager.logError(COMPONENT_NAME, "Erreur lors de la fermeture de la connexion InfluxDB: " + e.getMessage());
             }
         }
+    }
+
+    // AJOUTÉ: Getter pour l'API d'écriture, utile pour le diagnostic
+    public WriteApiBlocking getWriteApiBlocking() {
+        return this.writeApi;
     }
 }

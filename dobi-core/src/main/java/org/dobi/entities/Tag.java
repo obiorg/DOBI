@@ -27,7 +27,7 @@ public class Tag extends BaseEntity {
     @Column(name = "cycle")
     private Integer cycle; // Fréquence en secondes
 
-    @Column(name = "persistenceEnable")
+    @Column(name = "persistenceEnable") 
     private Boolean persistenceEnable = false;
 
 

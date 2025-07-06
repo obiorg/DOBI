@@ -4,10 +4,10 @@ import org.dobi.kafka.consumer.KafkaConsumerService;
 import org.dobi.manager.MachineManagerService;
 import org.dobi.kafka.manager.KafkaManagerService;
 import org.dobi.influxdb.InfluxDBWriterService;
-import org.dobi.logging.LogLevelManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.dobi.logging.LogLevelManager; // Ajouté pour le log dans le bean
 
 @Configuration
 // L'annotation @ComponentScan indique a Spring de scanner les packages specifies
@@ -15,9 +15,8 @@ import org.springframework.context.annotation.Configuration;
 @ComponentScan(basePackages = {"org.dobi.manager", "org.dobi.app.service", "org.dobi.app.controller", "org.dobi.influxdb"})
 public class DobiServiceConfiguration {
 
-    
     private static final String COMPONENT_NAME = "DOBI-SERVICE-CONFIGURATION";
-    
+
     @Bean
     public MachineManagerService machineManagerService() {
         return new MachineManagerService();
@@ -30,6 +29,13 @@ public class DobiServiceConfiguration {
 
         // Initialiser InfluxDBWriterService
         influxDBWriterService.initialize();
+
+        // AJOUTÉ: Log de diagnostic après l'initialisation d'InfluxDBWriterService
+        if (influxDBWriterService.getWriteApiBlocking() == null) {
+            LogLevelManager.logError("SPRING-CONFIG", "InfluxDBWriterService n'a pas pu initialiser WriteApiBlocking. Les écritures InfluxDB échoueront.");
+        } else {
+            LogLevelManager.logInfo("SPRING-CONFIG", "InfluxDBWriterService a initialisé WriteApiBlocking avec succès.");
+        }
 
         return new KafkaConsumerService(
                 machineManagerService.getAppProperty("kafka.bootstrap.servers"),
@@ -65,7 +71,8 @@ public class DobiServiceConfiguration {
             return new InfluxDBWriterService("invalid_url", "invalid_token", "invalid_org", "invalid_bucket") {
                 @Override
                 public void initialize() {
-                    /* Ne fait rien, car le service est non-opérationnel */ }
+                    LogLevelManager.logWarn(COMPONENT_NAME, "InfluxDBWriterService (No-Op) : initialize() appelé, mais les propriétés sont manquantes. Pas d'initialisation réelle.");
+                }
 
                 @Override
                 public void writeTagData(org.dobi.dto.TagData tagData) {
