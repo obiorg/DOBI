@@ -9,13 +9,17 @@ import org.dobi.logging.LogLevelManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
-import org.dobi.core.websocket.TagWebSocketController; // Ajouté
+import org.dobi.core.websocket.TagWebSocketController; // Import correct
+import org.dobi.core.websocket.WebSocketConfig; // AJOUTÉ : Import de WebSocketConfig pour s'assurer qu'il est bien visible
 
 @Configuration
-@ComponentScan(basePackages = {"org.dobi.manager", "org.dobi.app.service", "org.dobi.app.controller", "org.dobi.influxdb"})
+// L'annotation @ComponentScan indique a Spring de scanner les packages specifies
+// pour trouver des composants (@Service, @Component, etc.) a gerer.
+// S'assurer que 'org.dobi.core.websocket' est bien inclus.
+@ComponentScan(basePackages = {"org.dobi.manager", "org.dobi.app.service", "org.dobi.app.controller", "org.dobi.influxdb", "org.dobi.core.websocket"})
 public class DobiServiceConfiguration {
 
-    private static final String COMPONENT_NAME = "DOBI-SERVICE-CONFIGURATION";
+    private static final String COMPONENT_NAME = "SPRING-CONFIG"; // Pour les logs dans ce fichier
 
     @Bean
     public MachineManagerService machineManagerService() {
@@ -23,15 +27,15 @@ public class DobiServiceConfiguration {
     }
 
     @Bean
-    public KafkaConsumerService kafkaConsumerService(MachineManagerService machineManagerService, InfluxDBWriterService influxDBWriterService, TagWebSocketController tagWebSocketController) { // Modifié pour injecter TagWebSocketController
+    public KafkaConsumerService kafkaConsumerService(MachineManagerService machineManagerService, InfluxDBWriterService influxDBWriterService, TagWebSocketController tagWebSocketController) {
         machineManagerService.initializeKafka();
 
         influxDBWriterService.initialize();
 
         if (influxDBWriterService.getWriteApiBlocking() == null) {
-            LogLevelManager.logError("SPRING-CONFIG", "InfluxDBWriterService n'a pas pu initialiser WriteApiBlocking. Les écritures InfluxDB échoueront.");
+            LogLevelManager.logError(COMPONENT_NAME, "InfluxDBWriterService n'a pas pu initialiser WriteApiBlocking. Les écritures InfluxDB échoueront.");
         } else {
-            LogLevelManager.logInfo("SPRING-CONFIG", "InfluxDBWriterService a initialisé WriteApiBlocking avec succès.");
+            LogLevelManager.logInfo(COMPONENT_NAME, "InfluxDBWriterService a initialisé WriteApiBlocking avec succès.");
         }
 
         return new KafkaConsumerService(
@@ -40,7 +44,7 @@ public class DobiServiceConfiguration {
                 machineManagerService.getAppProperty("kafka.topic.tags.data"),
                 machineManagerService.getEmf(),
                 influxDBWriterService,
-                tagWebSocketController // Passé le contrôleur WebSocket au consommateur Kafka
+                tagWebSocketController
         );
     }
 
@@ -61,7 +65,7 @@ public class DobiServiceConfiguration {
                 || influxdbOrg == null || influxdbOrg.isEmpty()
                 || influxdbBucket == null || influxdbBucket.isEmpty()) {
 
-            LogLevelManager.logError("SPRING-CONFIG", "Propriétés InfluxDB manquantes ou vides dans application.properties. Le service InfluxDBWriterService ne sera pas opérationnel.");
+            LogLevelManager.logError(COMPONENT_NAME, "Propriétés InfluxDB manquantes ou vides dans application.properties. Le service InfluxDBWriterService ne sera pas opérationnel.");
 
             return new InfluxDBWriterService("invalid_url", "invalid_token", "invalid_org", "invalid_bucket") {
                 @Override
@@ -94,13 +98,20 @@ public class DobiServiceConfiguration {
         readerService.initialize();
 
         if (readerService.getInfluxDBClient() == null) {
-            LogLevelManager.logError("SPRING-CONFIG", "InfluxDBReaderService n'a pas pu initialiser son client. Les lectures InfluxDB échoueront.");
+            LogLevelManager.logError(COMPONENT_NAME, "InfluxDBReaderService n'a pas pu initialiser son client. Les lectures InfluxDB échoueront.");
         } else {
-            LogLevelManager.logInfo("SPRING-CONFIG", "InfluxDBReaderService a initialisé son client avec succès.");
+            LogLevelManager.logInfo(COMPONENT_NAME, "InfluxDBReaderService a initialisé son client avec succès.");
         }
 
         return readerService;
     }
+
+    // AJOUTÉ : Assurez-vous que WebSocketConfig est bien un bean géré par Spring.
+    // Normalement, @Configuration et @EnableWebSocketMessageBroker suffisent,
+    // mais si elle n'est pas dans un package scanné par l'application principale,
+    // on peut la déclarer explicitement ici ou s'assurer que le ComponentScan
+    // de l'application principale (DobiApplication.java) la couvre.
+    // Puisque nous avons déplacé WebSocketConfig dans org.dobi.core.websocket,
+    // et que dobi-app scanne déjà org.dobi.core.websocket, cela devrait être bon.
+    // Si cette erreur persiste, c'est que le problème est plus subtil.
 }
-
-
