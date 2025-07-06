@@ -4,14 +4,13 @@ import org.dobi.kafka.consumer.KafkaConsumerService;
 import org.dobi.manager.MachineManagerService;
 import org.dobi.kafka.manager.KafkaManagerService;
 import org.dobi.influxdb.InfluxDBWriterService;
+import org.dobi.influxdb.InfluxDBReaderService; // Ajouté pour le service de lecture
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
-import org.dobi.logging.LogLevelManager; // Ajouté pour le log dans le bean
+import org.dobi.logging.LogLevelManager;
 
 @Configuration
-// L'annotation @ComponentScan indique a Spring de scanner les packages specifies
-// pour trouver des composants (@Service, @Component, etc.) a gerer.
 @ComponentScan(basePackages = {"org.dobi.manager", "org.dobi.app.service", "org.dobi.app.controller", "org.dobi.influxdb"})
 public class DobiServiceConfiguration {
 
@@ -24,13 +23,10 @@ public class DobiServiceConfiguration {
 
     @Bean
     public KafkaConsumerService kafkaConsumerService(MachineManagerService machineManagerService, InfluxDBWriterService influxDBWriterService) {
-        // Initialiser Kafka apres que la config ait ete chargee par le machineManager
         machineManagerService.initializeKafka();
 
-        // Initialiser InfluxDBWriterService
         influxDBWriterService.initialize();
 
-        // AJOUTÉ: Log de diagnostic après l'initialisation d'InfluxDBWriterService
         if (influxDBWriterService.getWriteApiBlocking() == null) {
             LogLevelManager.logError("SPRING-CONFIG", "InfluxDBWriterService n'a pas pu initialiser WriteApiBlocking. Les écritures InfluxDB échoueront.");
         } else {
@@ -53,13 +49,11 @@ public class DobiServiceConfiguration {
 
     @Bean
     public InfluxDBWriterService influxDBWriterService(MachineManagerService machineManagerService) {
-        // Recuperer les proprietes InfluxDB depuis application.properties via MachineManagerService
         String influxdbUrl = machineManagerService.getAppProperty("influxdb.url");
         String influxdbToken = machineManagerService.getAppProperty("influxdb.token");
         String influxdbOrg = machineManagerService.getAppProperty("influxdb.org");
         String influxdbBucket = machineManagerService.getAppProperty("influxdb.bucket");
 
-        // Validation des propriétés ici
         if (influxdbUrl == null || influxdbUrl.isEmpty()
                 || influxdbToken == null || influxdbToken.isEmpty()
                 || influxdbOrg == null || influxdbOrg.isEmpty()
@@ -67,7 +61,6 @@ public class DobiServiceConfiguration {
 
             LogLevelManager.logError("SPRING-CONFIG", "Propriétés InfluxDB manquantes ou vides dans application.properties. Le service InfluxDBWriterService ne sera pas opérationnel.");
 
-            // Retourne une implémentation "No-Op" pour éviter les NPE et permettre à l'application de démarrer
             return new InfluxDBWriterService("invalid_url", "invalid_token", "invalid_org", "invalid_bucket") {
                 @Override
                 public void initialize() {
@@ -86,5 +79,24 @@ public class DobiServiceConfiguration {
         }
 
         return new InfluxDBWriterService(influxdbUrl, influxdbToken, influxdbOrg, influxdbBucket);
+    }
+
+    @Bean // Nouveau bean pour le service de lecture InfluxDB
+    public InfluxDBReaderService influxDBReaderService(MachineManagerService machineManagerService) {
+        String influxdbUrl = machineManagerService.getAppProperty("influxdb.url");
+        String influxdbToken = machineManagerService.getAppProperty("influxdb.token");
+        String influxdbOrg = machineManagerService.getAppProperty("influxdb.org");
+        String influxdbBucket = machineManagerService.getAppProperty("influxdb.bucket");
+
+        InfluxDBReaderService readerService = new InfluxDBReaderService(influxdbUrl, influxdbToken, influxdbOrg, influxdbBucket);
+        readerService.initialize(); // Initialiser le service de lecture
+
+        if (readerService.getInfluxDBClient() == null) { // Vérification de l'initialisation du client interne
+            LogLevelManager.logError("SPRING-CONFIG", "InfluxDBReaderService n'a pas pu initialiser son client. Les lectures InfluxDB échoueront.");
+        } else {
+            LogLevelManager.logInfo("SPRING-CONFIG", "InfluxDBReaderService a initialisé son client avec succès.");
+        }
+
+        return readerService;
     }
 }
