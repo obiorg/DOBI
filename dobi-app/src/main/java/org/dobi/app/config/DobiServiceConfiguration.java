@@ -10,7 +10,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.dobi.core.websocket.TagWebSocketController; // Import correct
-import org.dobi.core.websocket.WebSocketConfig; // AJOUTÉ : Import de WebSocketConfig pour s'assurer qu'il est bien visible
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 
 @Configuration
 // L'annotation @ComponentScan indique a Spring de scanner les packages specifies
@@ -27,24 +27,30 @@ public class DobiServiceConfiguration {
     }
 
     @Bean
-    public KafkaConsumerService kafkaConsumerService(MachineManagerService machineManagerService, InfluxDBWriterService influxDBWriterService, TagWebSocketController tagWebSocketController) {
+    public KafkaConsumerService kafkaConsumerService(
+            MachineManagerService machineManagerService,
+            InfluxDBWriterService influxDBWriterService,
+            TagWebSocketController tagWebSocketController,
+            SimpMessagingTemplate messagingTemplate // <-- AJOUTÉ : Spring va injecter ce bean automatiquement
+    ) {
         machineManagerService.initializeKafka();
-
         influxDBWriterService.initialize();
 
         if (influxDBWriterService.getWriteApiBlocking() == null) {
-            LogLevelManager.logError(COMPONENT_NAME, "InfluxDBWriterService n'a pas pu initialiser WriteApiBlocking. Les écritures InfluxDB échoueront.");
+            LogLevelManager.logError(COMPONENT_NAME, "InfluxDBWriterService n'a pas pu initialiser WriteApiBlocking.");
         } else {
             LogLevelManager.logInfo(COMPONENT_NAME, "InfluxDBWriterService a initialisé WriteApiBlocking avec succès.");
         }
 
+        // CORRIGÉ : On passe le messagingTemplate au constructeur
         return new KafkaConsumerService(
                 machineManagerService.getAppProperty("kafka.bootstrap.servers"),
                 "dobi-persistence-group",
                 machineManagerService.getAppProperty("kafka.topic.tags.data"),
                 machineManagerService.getEmf(),
                 influxDBWriterService,
-                tagWebSocketController
+                tagWebSocketController,
+                messagingTemplate // <-- AJOUTÉ
         );
     }
 

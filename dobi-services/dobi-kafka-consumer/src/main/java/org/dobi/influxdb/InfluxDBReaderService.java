@@ -7,14 +7,10 @@ import com.influxdb.query.FluxRecord;
 import org.dobi.logging.LogLevelManager;
 import org.springframework.stereotype.Service;
 
-import java.time.Instant;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * Service pour la lecture des données depuis InfluxDB. Il permet de récupérer

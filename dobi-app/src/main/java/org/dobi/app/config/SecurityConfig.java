@@ -40,7 +40,7 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         // Autorise les requêtes depuis votre frontend Next.js
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000", "http://192.168.242.32:3000"));
+        configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000",  "http://192.168.242.32:3000"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setAllowCredentials(true);

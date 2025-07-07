@@ -1,6 +1,7 @@
 package org.dobi.entities;
 
 import jakarta.persistence.*;
+import java.util.Date;
 // import java.time.LocalDateTime; // Plus nécessaire si hérité
 // import java.util.Date; // Plus nécessaire si hérité
 
@@ -10,7 +11,22 @@ import jakarta.persistence.*;
  */
 @Entity
 @Table(name = "persistence")
-public class Persistence extends BaseEntity { // Hérite de BaseEntity
+public class Persistence extends BaseEntity {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Basic(optional = false)
+    @Column(name = "id")
+    private Integer id;
+    @Column(name = "deleted")
+    private Boolean deleted;
+    @Column(name = "created")
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date created;
+    @Column(name = "changed")
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date changed;
+// Hérite de BaseEntity
 
 // Les champs 'id', 'deleted', 'created', 'changed' sont maintenant hérités de BaseEntity.
 // Il ne faut PAS les redéfinir ici, sinon cela crée un conflit de type.
@@ -112,4 +128,49 @@ public class Persistence extends BaseEntity { // Hérite de BaseEntity
     public String toString() {
         return "org.dobi.entities.Persistence[ id=" + getId() + " ]";
     }
+
+    public Persistence(Integer id) {
+        this.id = id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
+    public Boolean getDeleted() {
+        return deleted;
+    }
+
+    public void setDeleted(Boolean deleted) {
+        this.deleted = deleted;
+    }
+
+    public void setCreated(Date created) {
+        this.created = created;
+    }
+
+    public void setChanged(Date changed) {
+        this.changed = changed;
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 0;
+        hash += (id != null ? id.hashCode() : 0);
+        return hash;
+    }
+
+    @Override
+    public boolean equals(Object object) {
+        // TODO: Warning - this method won't work in the case the id fields are not set
+        if (!(object instanceof Persistence)) {
+            return false;
+        }
+        Persistence other = (Persistence) object;
+        if ((this.id == null && other.id != null) || (this.id != null && !this.id.equals(other.id))) {
+            return false;
+        }
+        return true;
+    }
+
 }

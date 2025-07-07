@@ -9,9 +9,7 @@ import org.dobi.dto.TagData;
 import org.dobi.logging.LogLevelManager;
 import org.springframework.stereotype.Service;
 
-import java.time.Instant;
 import java.time.LocalDateTime;
-import java.util.concurrent.TimeUnit;
 
 @Service
 public class InfluxDBWriterService {
