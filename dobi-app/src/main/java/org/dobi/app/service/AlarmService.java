@@ -1,6 +1,6 @@
 package org.dobi.app.service;
 
-import org.dobi.app.controller.AlarmController.AlarmDto; // Nous utiliserons le DTO du contrôleur
+import org.dobi.app.controller.AlarmController.AlarmDto; // On réutilise le DTO du contrôleur
 import org.dobi.logging.LogLevelManager;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
