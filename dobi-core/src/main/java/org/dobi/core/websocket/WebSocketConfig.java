@@ -29,6 +29,8 @@
             // Pour la production, remplacez "*" par les origines spécifiques de votre frontend.
             registry.addEndpoint("/ws-dobi")
                     .setAllowedOrigins(
+                                "http://localhost:3000",
+                            "http://10.242.14.3:3000",
                         "http://localhost",       // Pour les tests locaux via un serveur web
                         "http://10.242.14.3",     // Pour l'accès direct via l'IP de votre serveur DOBI
                         "null"                    // Pour les fichiers HTML ouverts directement depuis le système de fichiers (origin est 'null')
