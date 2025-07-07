@@ -83,6 +83,10 @@
             <version>6.1.6</version> <!-- Assurez-vous que la version correspond à votre version de Spring Boot -->
         </dependency>
 
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-security</artifactId>
+            </dependency>
     </dependencies>
 
     <build>
