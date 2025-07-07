@@ -22,10 +22,12 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
-        // MODIFIÉ : La ligne .setAllowedOrigins(...) a été supprimée.
-        // La configuration CORS est maintenant gérée par SecurityConfig.
-        registry.addEndpoint("/ws-dobi").withSockJS();
-
+        // CORRIGÉ : On restaure la configuration des origines autorisées
+        // spécifiquement pour l'endpoint SockJS. C'est crucial pour la poignée de main.
+        registry.addEndpoint("/ws-dobi")
+                .setAllowedOrigins("http://localhost:3000", "http://192.168.242.32:3000")
+                .withSockJS();
+        
         LogLevelManager.logInfo(COMPONENT_NAME, "Endpoint WebSocket STOMP enregistré: /ws-dobi.");
     }
 }
