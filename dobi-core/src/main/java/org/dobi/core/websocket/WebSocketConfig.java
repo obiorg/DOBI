@@ -25,7 +25,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         // CORRIGÉ : On restaure la configuration des origines autorisées
         // spécifiquement pour l'endpoint SockJS. C'est crucial pour la poignée de main.
         registry.addEndpoint("/ws-dobi")
-                .setAllowedOrigins("http://localhost:3000", "http://192.168.242.32:3000")
+                .setAllowedOrigins("http://localhost:3000","http://10.242.14.3:3000", "http://192.168.242.32:3000")
                 .withSockJS();
         
         LogLevelManager.logInfo(COMPONENT_NAME, "Endpoint WebSocket STOMP enregistré: /ws-dobi.");
