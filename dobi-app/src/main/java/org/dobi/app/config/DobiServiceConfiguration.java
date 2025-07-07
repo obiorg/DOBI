@@ -1,6 +1,7 @@
 package org.dobi.app.config;
 
 import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.Persistence;
 import org.dobi.app.service.AlarmService;
 import org.dobi.core.ports.AlarmNotifier;
 import org.dobi.core.websocket.TagWebSocketController;
@@ -16,9 +17,6 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-// L'annotation @ComponentScan indique a Spring de scanner les packages specifies
-// pour trouver des composants (@Service, @Component, etc.) a gerer.
-// S'assurer que 'org.dobi.core.websocket' est bien inclus.
 @ComponentScan(basePackages = {
     "org.dobi.manager",
     "org.dobi.app.service",
@@ -29,11 +27,22 @@ import org.springframework.context.annotation.Configuration;
 })
 public class DobiServiceConfiguration {
 
-    private static final String COMPONENT_NAME = "SPRING-CONFIG"; // Pour les logs dans ce fichier
+    private static final String COMPONENT_NAME = "SPRING-CONFIG";
+
+    /**
+     * NOUVEAU BEAN CENTRALISÉ : Crée une instance unique de
+     * l'EntityManagerFactory pour toute l'application. Ce bean sera maintenant
+     * injectable dans tous les autres services.
+     */
+    @Bean
+    public EntityManagerFactory entityManagerFactory() {
+        // La création se fait ici une seule fois.
+        return Persistence.createEntityManagerFactory("DOBI-PU");
+    }
 
     @Bean
-    public MachineManagerService machineManagerService() {
-        return new MachineManagerService();
+    public MachineManagerService machineManagerService(EntityManagerFactory emf) {
+        return new MachineManagerService(emf);
     }
 
     @Bean
@@ -106,38 +115,33 @@ public class DobiServiceConfiguration {
 
     /**
      * BEAN MIS À JOUR : Le constructeur de KafkaConsumerService a changé.Nous
- ajoutons AlarmEngineService à la liste des dépendances.
+     * ajoutons AlarmEngineService à la liste des dépendances.
+     *
      * @param machineManagerService
      * @param influxDBWriterService
      * @param tagWebSocketController
      * @param alarmEngineService
-     * @return 
+     * @return
      */
     @Bean
     public KafkaConsumerService kafkaConsumerService(
             MachineManagerService machineManagerService,
             InfluxDBWriterService influxDBWriterService,
             TagWebSocketController tagWebSocketController,
-            AlarmEngineService alarmEngineService) {
+            AlarmEngineService alarmEngineService,
+            EntityManagerFactory emf) { // L'EMF est aussi injecté ici
 
         machineManagerService.initializeKafka();
-
         influxDBWriterService.initialize();
-
-        if (influxDBWriterService.getWriteApiBlocking() == null) {
-            LogLevelManager.logError(COMPONENT_NAME, "InfluxDBWriterService n'a pas pu initialiser WriteApiBlocking. Les écritures InfluxDB échoueront.");
-        } else {
-            LogLevelManager.logInfo(COMPONENT_NAME, "InfluxDBWriterService a initialisé WriteApiBlocking avec succès.");
-        }
 
         return new KafkaConsumerService(
                 machineManagerService.getAppProperty("kafka.bootstrap.servers"),
                 "dobi-persistence-group",
                 machineManagerService.getAppProperty("kafka.topic.tags.data"),
-                machineManagerService.getEmf(),
+                emf, // On passe le bean EMF partagé
                 influxDBWriterService,
                 tagWebSocketController,
-                alarmEngineService // <-- PASSAGE DU SERVICE AU CONSTRUCTEUR
+                alarmEngineService
         );
     }
 

@@ -43,11 +43,15 @@ public class MachineManagerService {
     private boolean alarmMonitoringEnabled = true;
     private int alarmCheckIntervalSeconds = 15; // Vérification alarmes toutes les 15 secondes
 
-    public MachineManagerService() {
-        this.emf = Persistence.createEntityManagerFactory("DOBI-PU");
+    /**
+     * CONSTRUCTEUR MIS À JOUR : Ne crée plus l'EntityManagerFactory, mais le
+     * reçoit par injection de dépendances.
+     */
+    public MachineManagerService(EntityManagerFactory emf) {
+        this.emf = emf; // Reçoit l'instance partagée
         loadAppProperties();
         loadDriverProperties();
-        LogLevelManager.logInfo(COMPONENT_NAME, "MachineManagerService initialisé avec support alarmes Profinet");
+        LogLevelManager.logInfo(COMPONENT_NAME, "MachineManagerService initialisé.");
     }
 
     public void initializeKafka() {
@@ -66,8 +70,7 @@ public class MachineManagerService {
             }
             appProperties.load(input);
             LogLevelManager.logDebug(COMPONENT_NAME, "Propriétés application chargées");
-        }
-        catch (Exception ex) {
+        } catch (Exception ex) {
             LogLevelManager.logError(COMPONENT_NAME, "Erreur chargement application.properties: " + ex.getMessage());
         }
     }
@@ -80,8 +83,7 @@ public class MachineManagerService {
             }
             driverProperties.load(input);
             LogLevelManager.logDebug(COMPONENT_NAME, "Propriétés drivers chargées");
-        }
-        catch (Exception ex) {
+        } catch (Exception ex) {
             LogLevelManager.logError(COMPONENT_NAME, "Erreur chargement drivers.properties: " + ex.getMessage());
         }
     }
