@@ -1,61 +1,47 @@
 package org.dobi.app.controller;
 
-import org.dobi.app.service.AlarmService; // Importer notre nouveau service
+import org.dobi.app.service.ActiveAlarmQueryService;
+import org.dobi.dto.ActiveAlarmDto;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.Instant;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
+/**
+ * Contrôleur REST final pour la gestion des alarmes.
+ * Expose les endpoints pour lister et acquitter les alarmes actives.
+ */
 @RestController
 @RequestMapping("/api/v1/alarms")
 public class AlarmController {
 
-    private final AlarmService alarmService; // Injection du service
+    private final ActiveAlarmQueryService alarmQueryService;
 
-    public AlarmController(AlarmService alarmService) {
-        this.alarmService = alarmService;
+    public AlarmController(ActiveAlarmQueryService alarmQueryService) {
+        this.alarmQueryService = alarmQueryService;
     }
 
-    public record AlarmDto(
-            String alarmId, String timestamp, String message,
-            String priority, String deviceName, boolean acknowledged
-            ) {
-
+    /**
+     * Récupère la liste de toutes les alarmes actuellement actives dans le système.
+     * @return Une liste de DTOs contenant les détails de chaque alarme active.
+     */
+    @GetMapping("/active")
+    public ResponseEntity<List<ActiveAlarmDto>> getActiveAlarms() {
+        List<ActiveAlarmDto> activeAlarms = alarmQueryService.getActiveAlarms();
+        return ResponseEntity.ok(activeAlarms);
     }
 
-    @GetMapping("/active-mock")
-    public ResponseEntity<List<AlarmDto>> getActiveMockAlarms() {
-        List<AlarmDto> mockAlarms = new ArrayList<>();
-        mockAlarms.add(new AlarmDto("uuid-1", Instant.now().minusSeconds(60).toString(), "Perte de communication avec le variateur principal", "CRITICAL", "VARIATEUR_POMPE", false));
-        mockAlarms.add(new AlarmDto("uuid-2", Instant.now().minusSeconds(300).toString(), "Seuil de température haut atteint sur le moteur A", "HIGH", "AUTOMATE_PRINCIPAL", false));
-        return ResponseEntity.ok(mockAlarms);
-    }
-
-    // NOUVEL ENDPOINT POUR DÉCLENCHER UNE ALARME EN TEMPS RÉEL
-    @PostMapping("/trigger-mock")
-    public ResponseEntity<Map<String, Object>> triggerMockAlarm() {
-        AlarmDto newAlarm = new AlarmDto(
-                UUID.randomUUID().toString(),
-                Instant.now().toString(),
-                "Surchauffe détectée sur le convoyeur B-12",
-                "CRITICAL",
-                "AUTOMATE_PRINCIPAL",
-                false
-        );
-
-        // Utilise le service pour diffuser l'alarme à tous les clients
-        alarmService.broadcastAlarm(newAlarm);
-
-        return ResponseEntity.ok(Map.of("success", true, "message", "Alarme de test diffusée via WebSocket."));
-    }
-
-    @PostMapping("/{alarmId}/acknowledge-mock")
-    public ResponseEntity<Map<String, Object>> acknowledgeMockAlarm(@PathVariable String alarmId) {
-        System.out.println("ACTION: Acquittement de l'alarme (simulation) : " + alarmId);
-        return ResponseEntity.ok(Map.of("success", true, "alarmId", alarmId));
+    /**
+     * Acquitte une alarme active spécifique.
+     */
+    @PostMapping("/{alarmId}/acknowledge")
+    public ResponseEntity<Map<String, Object>> acknowledgeAlarm(@PathVariable Long alarmId) {
+        boolean success = alarmQueryService.acknowledgeAlarm(alarmId);
+        if (success) {
+            return ResponseEntity.ok(Map.of("success", true, "alarmId", alarmId));
+        } else {
+            return ResponseEntity.status(404).body(Map.of("success", false, "message", "Alarme non trouvée ou déjà acquittée."));
+        }
     }
 }

@@ -1,22 +1,32 @@
 package org.dobi.app.config;
 
-import org.dobi.kafka.consumer.KafkaConsumerService;
-import org.dobi.manager.MachineManagerService;
-import org.dobi.kafka.manager.KafkaManagerService;
-import org.dobi.influxdb.InfluxDBWriterService;
+import jakarta.persistence.EntityManagerFactory;
+import org.dobi.app.service.AlarmService;
+import org.dobi.core.ports.AlarmNotifier;
+import org.dobi.core.websocket.TagWebSocketController;
 import org.dobi.influxdb.InfluxDBReaderService;
+import org.dobi.influxdb.InfluxDBWriterService;
+import org.dobi.kafka.consumer.KafkaConsumerService;
+import org.dobi.kafka.manager.KafkaManagerService;
 import org.dobi.logging.LogLevelManager;
+import org.dobi.manager.MachineManagerService;
+import org.dobi.services.alarm.AlarmEngineService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
-import org.dobi.core.websocket.TagWebSocketController; // Import correct
-import org.dobi.core.websocket.WebSocketConfig; // AJOUTÉ : Import de WebSocketConfig pour s'assurer qu'il est bien visible
 
 @Configuration
 // L'annotation @ComponentScan indique a Spring de scanner les packages specifies
 // pour trouver des composants (@Service, @Component, etc.) a gerer.
 // S'assurer que 'org.dobi.core.websocket' est bien inclus.
-@ComponentScan(basePackages = {"org.dobi.manager", "org.dobi.app.service", "org.dobi.app.controller", "org.dobi.influxdb", "org.dobi.core.websocket"})
+@ComponentScan(basePackages = {
+    "org.dobi.manager",
+    "org.dobi.app.service",
+    "org.dobi.app.controller",
+    "org.dobi.influxdb",
+    "org.dobi.core.websocket",
+    "org.dobi.services.alarm"
+})
 public class DobiServiceConfiguration {
 
     private static final String COMPONENT_NAME = "SPRING-CONFIG"; // Pour les logs dans ce fichier
@@ -24,28 +34,6 @@ public class DobiServiceConfiguration {
     @Bean
     public MachineManagerService machineManagerService() {
         return new MachineManagerService();
-    }
-
-    @Bean
-    public KafkaConsumerService kafkaConsumerService(MachineManagerService machineManagerService, InfluxDBWriterService influxDBWriterService, TagWebSocketController tagWebSocketController) {
-        machineManagerService.initializeKafka();
-
-        influxDBWriterService.initialize();
-
-        if (influxDBWriterService.getWriteApiBlocking() == null) {
-            LogLevelManager.logError(COMPONENT_NAME, "InfluxDBWriterService n'a pas pu initialiser WriteApiBlocking. Les écritures InfluxDB échoueront.");
-        } else {
-            LogLevelManager.logInfo(COMPONENT_NAME, "InfluxDBWriterService a initialisé WriteApiBlocking avec succès.");
-        }
-
-        return new KafkaConsumerService(
-                machineManagerService.getAppProperty("kafka.bootstrap.servers"),
-                "dobi-persistence-group",
-                machineManagerService.getAppProperty("kafka.topic.tags.data"),
-                machineManagerService.getEmf(),
-                influxDBWriterService,
-                tagWebSocketController
-        );
     }
 
     @Bean
@@ -104,6 +92,53 @@ public class DobiServiceConfiguration {
         }
 
         return readerService;
+    }
+
+    /**
+     * NOUVEAU BEAN : Crée l'instance du moteur d'alarmes. Spring injectera
+     * automatiquement l'EntityManagerFactory et l'implémentation de
+     * AlarmNotifier (qui est notre AlarmService).
+     */
+    @Bean
+    public AlarmEngineService alarmEngineService(EntityManagerFactory emf, AlarmNotifier alarmNotifier) {
+        return new AlarmEngineService(emf, alarmNotifier);
+    }
+
+    /**
+     * BEAN MIS À JOUR : Le constructeur de KafkaConsumerService a changé.Nous
+ ajoutons AlarmEngineService à la liste des dépendances.
+     * @param machineManagerService
+     * @param influxDBWriterService
+     * @param tagWebSocketController
+     * @param alarmEngineService
+     * @return 
+     */
+    @Bean
+    public KafkaConsumerService kafkaConsumerService(
+            MachineManagerService machineManagerService,
+            InfluxDBWriterService influxDBWriterService,
+            TagWebSocketController tagWebSocketController,
+            AlarmEngineService alarmEngineService) {
+
+        machineManagerService.initializeKafka();
+
+        influxDBWriterService.initialize();
+
+        if (influxDBWriterService.getWriteApiBlocking() == null) {
+            LogLevelManager.logError(COMPONENT_NAME, "InfluxDBWriterService n'a pas pu initialiser WriteApiBlocking. Les écritures InfluxDB échoueront.");
+        } else {
+            LogLevelManager.logInfo(COMPONENT_NAME, "InfluxDBWriterService a initialisé WriteApiBlocking avec succès.");
+        }
+
+        return new KafkaConsumerService(
+                machineManagerService.getAppProperty("kafka.bootstrap.servers"),
+                "dobi-persistence-group",
+                machineManagerService.getAppProperty("kafka.topic.tags.data"),
+                machineManagerService.getEmf(),
+                influxDBWriterService,
+                tagWebSocketController,
+                alarmEngineService // <-- PASSAGE DU SERVICE AU CONSTRUCTEUR
+        );
     }
 
     // AJOUTÉ : Assurez-vous que WebSocketConfig est bien un bean géré par Spring.

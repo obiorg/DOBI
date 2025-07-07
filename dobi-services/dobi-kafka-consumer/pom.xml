@@ -20,6 +20,12 @@
             <artifactId>dobi-core</artifactId>
             <version>${project.parent.version}</version> 
         </dependency>
+        
+        <dependency>
+            <groupId>org.dobi</groupId>
+            <artifactId>dobi-alarm-service</artifactId>
+            <version>${project.parent.version}</version> 
+        </dependency>
  
         <!-- Dépendances Kafka -->
         <dependency>

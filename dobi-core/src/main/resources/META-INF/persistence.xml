@@ -3,31 +3,38 @@
              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
              xsi:schemaLocation="https://jakarta.ee/xml/ns/persistence https://jakarta.ee/xml/ns/persistence/persistence_3_0.xsd"
              version="3.0">
-  <persistence-unit name="DOBI-PU" transaction-type="RESOURCE_LOCAL">
-    <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
+    <persistence-unit name="DOBI-PU" transaction-type="RESOURCE_LOCAL">
+        <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
     
-    <class>org.dobi.entities.BaseEntity</class>
-    <class>org.dobi.entities.Company</class>
-    <class>org.dobi.entities.MachDriver</class>
-    <class>org.dobi.entities.Machine</class>
-    <class>org.dobi.entities.Tag</class>
-    <class>org.dobi.entities.TagType</class>
-    <class>org.dobi.entities.TagMemory</class>
-    <class>org.dobi.entities.Persistence</class>
-    <class>org.dobi.entities.PersStandard</class>
+        <!-- Entités existantes -->
+        <class>org.dobi.entities.BaseEntity</class>
+        <class>org.dobi.entities.Company</class>
+        <class>org.dobi.entities.MachDriver</class>
+        <class>org.dobi.entities.Machine</class>
+        <class>org.dobi.entities.Tag</class>
+        <class>org.dobi.entities.TagType</class>
+        <class>org.dobi.entities.TagMemory</class>
+        <class>org.dobi.entities.Persistence</class>
+        <class>org.dobi.entities.PersStandard</class>
+        <class>org.dobi.entities.PersStandardLimit</class>
+        <!-- Entités Measures -->
+        <class>org.dobi.entities.MeasComparator</class>
 
-    <properties>
-      <property name="jakarta.persistence.jdbc.driver" value="com.microsoft.sqlserver.jdbc.SQLServerDriver"/>
-      <property name="jakarta.persistence.jdbc.url" value="jdbc:sqlserver://10.242.14.2\BLCSCADA:1433;databaseName=OBI;encrypt=true;trustServerCertificate=true;"/>
-      <property name="jakarta.persistence.jdbc.user" value="obi"/>
-      <property name="jakarta.persistence.jdbc.password" value="ob!"/>
-      <property name="hibernate.dialect" value="org.hibernate.dialect.SQLServerDialect"/>
-      <property name="hibernate.show_sql" value="false"/>
-      <property name="hibernate.format_sql" value="true"/>
-    </properties>
-  </persistence-unit>
+        <!-- LES ALARMES -->
+        <class>org.dobi.entities.AlarmRender</class>
+        <class>org.dobi.entities.AlarmGroup</class>
+        <class>org.dobi.entities.AlarmClass</class>
+        <class>org.dobi.entities.Alarm</class>
+        <class>org.dobi.entities.ActiveAlarm</class>
+
+        <properties>
+            <property name="jakarta.persistence.jdbc.driver" value="com.microsoft.sqlserver.jdbc.SQLServerDriver"/>
+            <property name="jakarta.persistence.jdbc.url" value="jdbc:sqlserver://10.242.14.2\BLCSCADA:1433;databaseName=OBI;encrypt=true;trustServerCertificate=true;"/>
+            <property name="jakarta.persistence.jdbc.user" value="obi"/>
+            <property name="jakarta.persistence.jdbc.password" value="ob!"/>
+            <property name="hibernate.dialect" value="org.hibernate.dialect.SQLServerDialect"/>
+            <property name="hibernate.show_sql" value="false"/>
+            <property name="hibernate.format_sql" value="true"/>
+        </properties>
+    </persistence-unit>
 </persistence>
-
-
-
-

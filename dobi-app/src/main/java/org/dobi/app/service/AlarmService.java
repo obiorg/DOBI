@@ -1,12 +1,13 @@
 package org.dobi.app.service;
 
-import org.dobi.app.controller.AlarmController.AlarmDto; // On réutilise le DTO du contrôleur
+import org.dobi.core.ports.AlarmNotifier; // <-- IMPLÉMENTE L'INTERFACE
+import org.dobi.dto.ActiveAlarmDto;
 import org.dobi.logging.LogLevelManager;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 @Service
-public class AlarmService {
+public class AlarmService implements AlarmNotifier { // <-- IMPLÉMENTE L'INTERFACE
 
     private static final String COMPONENT_NAME = "ALARM-SERVICE";
     private final SimpMessagingTemplate messagingTemplate;
@@ -16,21 +17,21 @@ public class AlarmService {
     }
 
     /**
-     * Diffuse une mise à jour d'alarme à tous les clients abonnés.
+     * Diffuse une mise à jour d'alarme à tous les clients abonnés. C'est
+     * l'implémentation concrète de la méthode du contrat.
      *
-     * @param alarm L'alarme à diffuser.
+     * @param alarmDto Le DTO de l'alarme à diffuser.
      */
-    public void broadcastAlarm(AlarmDto alarm) {
-        if (alarm == null) {
+    @Override
+    public void notifyAlarmUpdate(ActiveAlarmDto alarmDto) {
+        if (alarmDto == null) {
             LogLevelManager.logWarn(COMPONENT_NAME, "Tentative de diffusion d'une alarme null.");
             return;
         }
 
-        // Le topic sur lequel les clients frontend s'abonneront
-        String destination = "/topic/alarms/updates";
+        final String destination = "/topic/alarms/updates";
+        messagingTemplate.convertAndSend(destination, alarmDto);
 
-        messagingTemplate.convertAndSend(destination, alarm);
-
-        LogLevelManager.logInfo(COMPONENT_NAME, "Alarme diffusée sur " + destination + ": " + alarm.message());
+        LogLevelManager.logInfo(COMPONENT_NAME, "Alarme diffusée sur " + destination + ": " + alarmDto.alarmName());
     }
 }

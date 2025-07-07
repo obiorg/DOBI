@@ -18,6 +18,7 @@ import org.dobi.influxdb.InfluxDBWriterService;
 import org.dobi.logging.LogLevelManager;
 import org.dobi.logging.LogLevelManager.LogLevel;
 import org.dobi.core.websocket.TagWebSocketController; // Ajouté pour le contrôleur WebSocket
+import org.dobi.services.alarm.AlarmEngineService; // <-- NOUVEL IMPORT
 
 import java.time.Duration;
 import java.time.Instant;
@@ -37,13 +38,19 @@ public class KafkaConsumerService implements Runnable {
 
     private final String bootstrapServers;
     private final InfluxDBWriterService influxDBWriterService;
-    private final TagWebSocketController tagWebSocketController; // Ajouté
+    private final TagWebSocketController tagWebSocketController;
+    private final AlarmEngineService alarmEngineService;
 
-    public KafkaConsumerService(String bootstrapServers, String groupId, String topic, EntityManagerFactory emf, InfluxDBWriterService influxDBWriterService, TagWebSocketController tagWebSocketController) { // Modifié le constructeur
+    public KafkaConsumerService(String bootstrapServers, String groupId,
+            String topic, EntityManagerFactory emf,
+            InfluxDBWriterService influxDBWriterService,
+            TagWebSocketController tagWebSocketController,
+            AlarmEngineService alarmEngineService) { // Modifié le constructeur
         this.emf = emf;
         this.bootstrapServers = bootstrapServers;
         this.influxDBWriterService = influxDBWriterService;
-        this.tagWebSocketController = tagWebSocketController; // Initialisé
+        this.tagWebSocketController = tagWebSocketController;
+        this.alarmEngineService = alarmEngineService;
 
         LogLevelManager.logInfo(COMPONENT_NAME, "Initialisation du consommateur Kafka");
         LogLevelManager.logDebug(COMPONENT_NAME, "Configuration - Servers: " + bootstrapServers
@@ -165,6 +172,16 @@ public class KafkaConsumerService implements Runnable {
                 em.merge(tag);
 
                 LogLevelManager.logTrace(COMPONENT_NAME, "Tag mis à jour: " + tag.getName() + " = " + data.value());
+
+                // === LOGIQUE D'INTEGRATION DU MOTEUR D'ALARMES ===============
+                // INTÉGRATION DU MOTEUR D'ALARMES
+                // Après avoir mis à jour le tag et avant de commiter, nous vérifions les alarmes.
+                if (alarmEngineService != null) {
+                    alarmEngineService.checkForAlarms(data);
+                } else {
+                    LogLevelManager.logWarn(COMPONENT_NAME, "AlarmEngineService non disponible. La vérification des alarmes est ignorée.");
+                }
+                // === FIN LOGIQUE D'INTEGRATION DU MOTEUR D'ALARMES ===========
 
                 // === LOGIQUE DE PERSISTANCE CONDITIONNELLE VERS SQL SERVER ===
                 if (tag.getPersistenceEnable() != null && tag.getPersistenceEnable()) {
@@ -310,5 +327,3 @@ public class KafkaConsumerService implements Runnable {
         }
     }
 }
-
-

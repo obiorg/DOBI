@@ -12,13 +12,14 @@
     <artifactId>dobi-services</artifactId>
     <packaging>pom</packaging>
     <name>DOBI :: Services</name>
-    <description>Module parent pour tous les services métier.</description>
+    <description>Module parent pour tous les services mÃ©tier.</description>
 
     <modules>
         <module>dobi-machine-manager</module>
-            <module>dobi-kafka-producer</module>
-            <module>dobi-kafka-consumer</module>
-            <module>dobi-kafka-manager</module>
+        <module>dobi-kafka-producer</module>
+        <module>dobi-kafka-consumer</module>
+        <module>dobi-kafka-manager</module>
+        <module>dobi-alarm-service</module>
     </modules>
 </project>
 
