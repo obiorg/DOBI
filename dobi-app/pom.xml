@@ -3,12 +3,14 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
+    
     <parent>
         <groupId>org.dobi</groupId>
         <artifactId>dobi-parent</artifactId>
         <version>1.0-SNAPSHOT</version>
         <relativePath>../</relativePath>
     </parent>
+    
     <artifactId>dobi-app</artifactId>
     <name>DOBI :: Application</name>
     <description>Point d'entrée principal de l'application DOBI avec API REST embarquée.</description>
@@ -64,12 +66,10 @@
         <dependency>
             <groupId>org.dobi</groupId>
             <artifactId>dobi-kafka-manager</artifactId>
-            <version>${project.version}</version>
         </dependency>            
         <dependency>
             <groupId>org.dobi</groupId>
             <artifactId>dobi-driver-opcua</artifactId>
-            <version>${project.version}</version>
         </dependency>             
         <dependency>
             <groupId>org.dobi</groupId>
@@ -81,12 +81,10 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-websocket</artifactId>
-            <version>3.2.5</version> <!-- Assurez-vous que la version correspond à votre version de Spring Boot -->
         </dependency>
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-messaging</artifactId>
-            <version>6.1.6</version> <!-- Assurez-vous que la version correspond à votre version de Spring Boot -->
         </dependency>
 
         <dependency>
@@ -96,7 +94,6 @@
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-dao</artifactId>
-            <version>2.0.8</version>
             <type>jar</type>
         </dependency>
     </dependencies>

@@ -12,7 +12,7 @@
     <artifactId>dobi-driver-api</artifactId>
     <packaging>jar</packaging>
     <name>DOBI :: Driver API</name>
-    <description>Définit les interfaces que tous les drivers concrets doivent implémenter.</description>
+    <description>DÃ©finit les interfaces que tous les drivers concrets doivent implÃ©menter.</description>
 
     <dependencies>
         <dependency>
