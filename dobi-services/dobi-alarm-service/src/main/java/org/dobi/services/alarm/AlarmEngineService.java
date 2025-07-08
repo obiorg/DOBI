@@ -42,6 +42,7 @@ public class AlarmEngineService {
         Float currentValue = convertToFloat(tagData.value());
         if (currentValue == null) {
             // Ne peut pas traiter une alarme de limite pour une valeur non numérique
+            LogLevelManager.logWarn(COMPONENT_NAME, "Ne peut pas traiter une alarme de limite pour une valeur non numérique : id - " + tagData.tagId() + " pour tag " + tagData.tagName());
             return;
         }
 
@@ -67,8 +68,13 @@ public class AlarmEngineService {
     /**
      * Évalue une limite spécifique par rapport à la valeur actuelle du tag.
      */
-    private void evaluateLimit(EntityManager em, PersStandardLimit limit, TagData tagData, float currentValue) {
-        boolean conditionMet = compareValue(currentValue, limit.getValue(), limit.getComparator().getSymbol());
+    private void evaluateLimit(EntityManager em, PersStandardLimit limit,
+            TagData tagData, float currentValue) {
+        boolean conditionMet = compareValue(currentValue, limit.getValue(),
+                limit.getComparator().getSymbol());
+        LogLevelManager.logInfo(COMPONENT_NAME, "Un seuil de limite franchie pour le tag "
+                + tagData.tagName() + " valeur actuelle (" + currentValue
+                + " est " + limit.getComparator().getSymbol() + " à " + limit.getValue());
         ActiveAlarm existingAlarm = findActiveAlarmForLimit(em, limit.getId());
 
         em.getTransaction().begin();
