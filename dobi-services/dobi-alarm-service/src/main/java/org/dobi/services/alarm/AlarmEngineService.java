@@ -10,11 +10,15 @@ import org.dobi.dto.TagData;
 import org.dobi.entities.*;
 import org.dobi.logging.LogLevelManager;
 import org.springframework.stereotype.Service;
-// L'annotation @Transactional est retirée car nous gérons les transactions manuellement.
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
+/**
+ * Service central pour la logique de détection et de gestion des alarmes.
+ * Ce service est piloté par la configuration de la base de données.
+ */
 @Service
 public class AlarmEngineService {
 
@@ -28,6 +32,10 @@ public class AlarmEngineService {
         LogLevelManager.logInfo(COMPONENT_NAME, "AlarmEngineService initialisé.");
     }
 
+    /**
+     * Méthode principale appelée pour chaque nouvelle donnée de tag.
+     * @param tagData Les données du tag reçues de Kafka.
+     */
     public void checkForAlarms(TagData tagData) {
         Float currentValue = convertToFloat(tagData.value());
         if (currentValue == null) {
@@ -50,17 +58,29 @@ public class AlarmEngineService {
         }
     }
 
+    /**
+     * Évalue une limite spécifique par rapport à la valeur actuelle du tag.
+     * Gère la création ou la résolution d'une alarme.
+     */
+    @Transactional
     private void evaluateLimit(EntityManager em, PersStandardLimit limit, TagData tagData, float currentValue) {
         boolean conditionMet = compareValue(currentValue, limit.getValue(), limit.getComparator().getSymbol());
+        
+        // CORRECTION : On cherche une alarme existante en utilisant l'ID du tag et l'ID de la définition de l'alarme.
         ActiveAlarm existingAlarm = findActiveAlarm(em, limit.getTag().getId(), limit.getAlarmToTrigger().getId());
 
         if (conditionMet && existingAlarm == null) {
+            // CAS 1: NOUVELLE ALARME -> La condition est remplie et il n'y a pas d'alarme active pour ce couple tag/alarme.
             createNewActiveAlarm(em, limit, tagData, currentValue);
+
         } else if (!conditionMet && existingAlarm != null) {
+            // CAS 2: ALARME RÉSOLUE -> La condition n'est plus remplie mais une alarme était active.
             resolveActiveAlarm(em, existingAlarm);
-        } else if (conditionMet) {
+        } else if (conditionMet && existingAlarm != null) {
+            // CAS 3: ALARME TOUJOURS ACTIVE -> La condition est toujours remplie, aucune action nécessaire.
             LogLevelManager.logTrace(COMPONENT_NAME, "Alarme " + limit.getName() + " toujours active pour le tag " + tagData.tagName() + ". Aucune action.");
         }
+        // CAS 4: (!conditionMet && existingAlarm == null) -> Tout est normal, aucune action.
     }
 
     private void createNewActiveAlarm(EntityManager em, PersStandardLimit limit, TagData tagData, float currentValue) {
@@ -74,6 +94,7 @@ public class AlarmEngineService {
         newAlarm.setTriggerTime(LocalDateTime.now());
         newAlarm.setTriggerValue(currentValue);
         newAlarm.setAcknowledged(false);
+
         em.persist(newAlarm);
         em.getTransaction().commit();
 
@@ -119,16 +140,47 @@ public class AlarmEngineService {
         return results.get(0); // Retourne la première alarme trouvée
     }
 
-    // ... (le reste des méthodes utilitaires est inchangé)
     private Float convertToFloat(Object value) {
-        /* ... */ return null;
+        if (value instanceof Number) {
+            return ((Number) value).floatValue();
+    }
+        try {
+            return Float.parseFloat(value.toString());
+        } catch (NumberFormatException | NullPointerException e) {
+            return null;
+        }
     }
 
     private boolean compareValue(float currentValue, float limitValue, String comparator) {
-        /* ... */ return false;
+        return switch (comparator) {
+            case ">" -> currentValue > limitValue;
+            case ">=" -> currentValue >= limitValue;
+            case "<" -> currentValue < limitValue;
+            case "<=" -> currentValue <= limitValue;
+            case "=" -> currentValue == limitValue;
+            case "!=" -> currentValue != limitValue;
+            default -> false;
+        };
     }
 
     private ActiveAlarmDto convertToDto(ActiveAlarm alarm) {
-        /* ... */ return null;
+        if (alarm == null) return null;
+        
+        AlarmRender render = alarm.getAlarmDefinition().getAlarmClass().getRender();
+        return new ActiveAlarmDto(
+            alarm.getId(),
+            alarm.getAlarmDefinition().getName(),
+            alarm.getAlarmDefinition().getDescription(),
+            alarm.getTag().getName(),
+            alarm.getTriggerValue(),
+            alarm.getTriggerTime(),
+            alarm.isAcknowledged(),
+            alarm.getAckTime(),
+            alarm.getResolvedTime(),
+            alarm.getAlarmDefinition().getAlarmClass().getClassName(),
+            render != null ? render.getColor() : "128;128;128",
+            render != null ? render.getBackground() : "50;50;50",
+            render != null && render.getBlink() != null ? render.getBlink() : false
+        );
     }
 }
