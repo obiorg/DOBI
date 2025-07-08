@@ -4,12 +4,19 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 /**
- * Entité JPA représentant une alarme active dans le système. Chaque instance de
- * cette classe correspond à une ligne dans la table 'active_alarms'.
+ * Entité JPA représentant une alarme active dans le système. CORRECTION : Cette
+ * entité ne doit pas hériter de BaseEntity car sa table n'a pas les colonnes
+ * d'audit (created, changed, deleted). Sa clé primaire est définie directement
+ * ici.
  */
 @Entity
 @Table(name = "active_alarms")
-public class ActiveAlarm extends BaseEntity {
+public class ActiveAlarm { // <-- Ne hérite plus de BaseEntity
+
+    // Définition de la clé primaire directement dans la classe
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     // Relation vers la définition statique de l'alarme (nom, description, classe, etc.)
     @ManyToOne(fetch = FetchType.LAZY)
@@ -56,6 +63,14 @@ public class ActiveAlarm extends BaseEntity {
     }
 
     // Getters et Setters
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
     public Alarm getAlarmDefinition() {
         return alarmDefinition;
     }
