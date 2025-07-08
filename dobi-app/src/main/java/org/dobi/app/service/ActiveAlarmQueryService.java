@@ -126,4 +126,55 @@ public class ActiveAlarmQueryService {
                 render != null && render.getBlink() != null ? render.getBlink() : false
         );
     }
+
+    /**
+     * Acquitte toutes les alarmes actives non encore acquittées.
+     *
+     * @return Le nombre d'alarmes qui ont été acquittées.
+     */
+    @Transactional
+    public int acknowledgeAllAlarms() {
+        EntityManager em = emf.createEntityManager();
+        try {
+            em.getTransaction().begin();
+
+            // 1. Récupérer toutes les alarmes non acquittées pour les notifier après
+            TypedQuery<ActiveAlarm> query = em.createQuery(
+                    "SELECT a FROM ActiveAlarm a WHERE a.acknowledged = false AND a.resolvedTime IS NULL", ActiveAlarm.class);
+            List<ActiveAlarm> alarmsToAck = query.getResultList();
+
+            if (alarmsToAck.isEmpty()) {
+                em.getTransaction().rollback();
+                return 0;
+            }
+
+            // 2. Exécuter une requête de mise à jour en masse (plus performant)
+            int updatedCount = em.createQuery(
+                    "UPDATE ActiveAlarm a SET a.acknowledged = true, a.ackTime = :now, a.ackBy = 'system_bulk_ack' "
+                    + "WHERE a.acknowledged = false AND a.resolvedTime IS NULL")
+                    .setParameter("now", LocalDateTime.now())
+                    .executeUpdate();
+
+            em.getTransaction().commit();
+
+            // 3. Notifier le frontend pour chaque alarme mise à jour
+            alarmsToAck.forEach(alarm -> {
+                // On met à jour l'état localement avant de l'envoyer
+                alarm.setAcknowledged(true);
+                alarmNotifier.notifyAlarmUpdate(convertToDto(alarm));
+            });
+
+            LogLevelManager.logInfo(COMPONENT_NAME, updatedCount + " alarme(s) ont été acquittées en masse.");
+            return updatedCount;
+
+        } catch (Exception e) {
+            LogLevelManager.logError(COMPONENT_NAME, "Erreur lors de l'acquittement de masse des alarmes: " + e.getMessage());
+            if (em.getTransaction().isActive()) {
+                em.getTransaction().rollback();
+            }
+            return 0;
+        } finally {
+            em.close();
+        }
+    }
 }

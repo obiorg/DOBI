@@ -9,8 +9,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Contrôleur REST final pour la gestion des alarmes.
- * Expose les endpoints pour lister et acquitter les alarmes actives.
+ * Contrôleur REST final pour la gestion des alarmes. Expose les endpoints pour
+ * lister et acquitter les alarmes actives.
  */
 @RestController
 @RequestMapping("/api/v1/alarms")
@@ -23,7 +23,9 @@ public class AlarmController {
     }
 
     /**
-     * Récupère la liste de toutes les alarmes actuellement actives dans le système.
+     * Récupère la liste de toutes les alarmes actuellement actives dans le
+     * système.
+     *
      * @return Une liste de DTOs contenant les détails de chaque alarme active.
      */
     @GetMapping("/active")
@@ -43,5 +45,17 @@ public class AlarmController {
         } else {
             return ResponseEntity.status(404).body(Map.of("success", false, "message", "Alarme non trouvée ou déjà acquittée."));
         }
+    }
+
+    /**
+     * Acquitte en masse toutes les alarmes actives non acquittées.
+     */
+    @PostMapping("/acknowledge-all")
+    public ResponseEntity<Map<String, Object>> acknowledgeAllAlarms() {
+        int acknowledgedCount = alarmQueryService.acknowledgeAllAlarms();
+        return ResponseEntity.ok(Map.of(
+                "success", true,
+                "acknowledgedCount", acknowledgedCount
+        ));
     }
 }
