@@ -24,6 +24,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.util.Collections;
 import java.util.Properties;
 
@@ -168,7 +169,11 @@ public class KafkaConsumerService implements Runnable {
 
                 // Mise à jour de la valeur du tag
                 updateTagValue(tag, data.value());
-                tag.setvStamp(LocalDateTime.now());
+                // CORRECTION : Utiliser le timestamp de la donnée, et non "now()".
+                // On le stocke en UTC pour être cohérent.
+                Instant dataInstant = Instant.ofEpochMilli(data.timestamp());
+                tag.setvStamp(LocalDateTime.ofInstant(dataInstant, ZoneOffset.UTC));
+
                 em.merge(tag);
 
                 LogLevelManager.logTrace(COMPONENT_NAME, "Tag mis à jour: " + tag.getName() + " = " + data.value());
