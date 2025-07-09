@@ -1,5 +1,7 @@
 package org.dobi.manager;
 
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import org.dobi.api.IDriver;
 import org.dobi.dto.TagData;
 import org.dobi.entities.Machine;
@@ -11,7 +13,7 @@ import java.util.Optional; // Ajouté
 public class MachineCollector implements Runnable {
 
     private static final String COMPONENT_NAME = "COLLECTOR";
-    
+
     private Machine machine;
     private final IDriver driver;
     private volatile boolean running = true;
@@ -19,6 +21,8 @@ public class MachineCollector implements Runnable {
     private volatile String currentStatus = "Initialisation...";
     private long tagsReadCount = 0;
     private int effectiveCollectionInterval = 5000; // Intervalle de collecte effectif en ms (par défaut 5s)
+    private LocalDateTime connectedSince;
+    private int connectionCount = 0;
 
     public MachineCollector(Machine machine, IDriver driver, KafkaProducerService kps) {
         this.machine = machine;
@@ -31,9 +35,9 @@ public class MachineCollector implements Runnable {
     public void run() {
         String driverType = getDriverType();
         LogLevelManager.logInfo(COMPONENT_NAME, "Démarrage collecteur pour " + machine.getName() + " (Driver: " + driverType + ")");
-        
+
         driver.configure(machine);
-        
+
         while (running) {
             // Recalculer l'intervalle de collecte à chaque cycle pour s'adapter aux changements de tag.cycle
             recalculateCollectionInterval();
@@ -43,16 +47,22 @@ public class MachineCollector implements Runnable {
                 if (!driver.isConnected()) {
                     updateStatus("Connexion...");
                     LogLevelManager.logInfo(COMPONENT_NAME, "Tentative de connexion pour " + machine.getName());
-                    
+
                     if (!driver.connect()) {
                         updateStatus("Erreur Connexion");
                         LogLevelManager.logError(COMPONENT_NAME, "Échec de connexion pour " + machine.getName() + " - Nouvelle tentative dans 10s");
                         Thread.sleep(10000); // Attendre avant de réessayer
                         continue;
                     }
+
+                    if (driver.connect()) {
+                        // Mettre à jour les stats à chaque nouvelle connexion réussie
+                        this.connectedSince = LocalDateTime.now(ZoneOffset.UTC);
+                        this.connectionCount++;
+                    }
                     updateStatus("Connecté");
                     LogLevelManager.logInfo(COMPONENT_NAME, "Connexion établie pour " + machine.getName());
-                    
+
                     // === DIAGNOSTIC OPC UA ===
                     if (driver instanceof org.dobi.opcua.OpcUaDriver) {
                         performOpcUaDiagnostic();
@@ -62,41 +72,41 @@ public class MachineCollector implements Runnable {
                 // Étape 2 : Boucle de lecture des tags
                 int tagsInCycle = 0;
                 boolean readOk = true;
-                
+
                 if (machine.getTags() != null && !machine.getTags().isEmpty()) {
-                    LogLevelManager.logDebug(COMPONENT_NAME, "Début cycle de lecture pour " + machine.getName() + 
-                                         " (" + machine.getTags().size() + " tags configurés)");
-                    
+                    LogLevelManager.logDebug(COMPONENT_NAME, "Début cycle de lecture pour " + machine.getName()
+                            + " (" + machine.getTags().size() + " tags configurés)");
+
                     for (org.dobi.entities.Tag tag : machine.getTags()) {
                         if (!running) {
                             LogLevelManager.logInfo(COMPONENT_NAME, "Arrêt demandé pendant la lecture des tags");
                             break; // Sortir si un arrêt est demandé
                         }
-                        
+
                         // Condition modifiée : le tag doit être actif
-                        if (tag.isActive()) { 
+                        if (tag.isActive()) {
                             try {
                                 LogLevelManager.logTrace(COMPONENT_NAME, "Lecture tag: " + tag.getName() + " (machine: " + machine.getName() + ")");
-                                
+
                                 Object value = driver.read(tag);
                                 if (value != null) {
                                     // Si la lecture réussit, on envoie à Kafka
                                     TagData tagData = new TagData(tag.getId(), tag.getName(), value, System.currentTimeMillis());
                                     kafkaProducerService.sendTagData(tagData);
                                     tagsInCycle++;
-                                    
-                                    LogLevelManager.logTrace(COMPONENT_NAME, "Lecture réussie: " + tag.getName() + 
-                                                         " = " + value + " (machine: " + machine.getName() + ")");
+
+                                    LogLevelManager.logTrace(COMPONENT_NAME, "Lecture réussie: " + tag.getName()
+                                            + " = " + value + " (machine: " + machine.getName() + ")");
                                 } else {
                                     // La lecture a échoué (ex: tag inexistant), mais la connexion est peut-être OK
-                                    LogLevelManager.logDebug(COMPONENT_NAME, "Lecture échouée pour tag: " + tag.getName() + 
-                                                         " (machine: " + machine.getName() + ") - valeur null retournée");
+                                    LogLevelManager.logDebug(COMPONENT_NAME, "Lecture échouée pour tag: " + tag.getName()
+                                            + " (machine: " + machine.getName() + ") - valeur null retournée");
                                 }
                             } catch (Exception e) {
                                 // Une exception pendant la lecture indique une perte de connexion !
-                                LogLevelManager.logError(COMPONENT_NAME, "Exception de lecture pour tag " + tag.getName() + 
-                                                     " (machine: " + machine.getName() + "): " + e.getMessage() + 
-                                                     " - Perte de connexion suspectée");
+                                LogLevelManager.logError(COMPONENT_NAME, "Exception de lecture pour tag " + tag.getName()
+                                        + " (machine: " + machine.getName() + "): " + e.getMessage()
+                                        + " - Perte de connexion suspectée");
                                 readOk = false;
                                 driver.disconnect(); // Forcer la déconnexion pour réinitialiser l'état
                                 break; // Sortir de la boucle for des tags
@@ -113,14 +123,14 @@ public class MachineCollector implements Runnable {
                 if (readOk) {
                     tagsReadCount += tagsInCycle;
                     updateStatus("Connecté (lus: " + tagsReadCount + ")");
-                    
+
                     if (tagsInCycle > 0) {
-                        LogLevelManager.logDebug(COMPONENT_NAME, "Cycle terminé pour " + machine.getName() + 
-                                             " - " + tagsInCycle + " tags lus avec succès");
+                        LogLevelManager.logDebug(COMPONENT_NAME, "Cycle terminé pour " + machine.getName()
+                                + " - " + tagsInCycle + " tags lus avec succès");
                     }
-                    
+
                     // Utilisation de effectiveCollectionInterval pour le délai
-                    Thread.sleep(effectiveCollectionInterval); 
+                    Thread.sleep(effectiveCollectionInterval);
                 } else {
                     // Si une erreur de lecture a eu lieu, on attend un peu avant de retenter une connexion complète
                     updateStatus("Reconnexion...");
@@ -143,7 +153,7 @@ public class MachineCollector implements Runnable {
                 }
             }
         }
-        
+
         // Nettoyage final
         try {
             driver.disconnect();
@@ -153,20 +163,21 @@ public class MachineCollector implements Runnable {
             LogLevelManager.logError(COMPONENT_NAME, "Erreur lors de la déconnexion finale pour " + machine.getName() + ": " + e.getMessage());
         }
     }
-    
+
     /**
-     * Recalcule l'intervalle de collecte effectif basé sur le plus petit cycle des tags actifs.
-     * Si aucun tag actif n'est configuré avec un cycle, utilise un défaut (ex: 5 secondes).
+     * Recalcule l'intervalle de collecte effectif basé sur le plus petit cycle
+     * des tags actifs. Si aucun tag actif n'est configuré avec un cycle,
+     * utilise un défaut (ex: 5 secondes).
      */
     private void recalculateCollectionInterval() {
         Optional<Integer> minCycle = Optional.empty();
 
         if (machine.getTags() != null) {
             minCycle = machine.getTags().stream()
-                .filter(org.dobi.entities.Tag::isActive) // Ne considérer que les tags actifs
-                .filter(tag -> tag.getCycle() != null && tag.getCycle() > 0) // Ne considérer que les cycles valides
-                .map(org.dobi.entities.Tag::getCycle)
-                .min(Integer::compare);
+                    .filter(org.dobi.entities.Tag::isActive) // Ne considérer que les tags actifs
+                    .filter(tag -> tag.getCycle() != null && tag.getCycle() > 0) // Ne considérer que les cycles valides
+                    .map(org.dobi.entities.Tag::getCycle)
+                    .min(Integer::compare);
         }
 
         int newIntervalSeconds = minCycle.orElse(5); // Si aucun tag actif avec cycle, intervalle par défaut 5s
@@ -184,64 +195,64 @@ public class MachineCollector implements Runnable {
     private void performOpcUaDiagnostic() {
         try {
             org.dobi.opcua.OpcUaDriver opcDriver = (org.dobi.opcua.OpcUaDriver) driver;
-            
+
             LogLevelManager.logInfo(COMPONENT_NAME, "=== DIAGNOSTIC OPC UA POUR " + machine.getName() + " ===");
-            
+
             // Test direct avec les identifiants UaExpert
             LogLevelManager.logDebug(COMPONENT_NAME, "--- Test Identifiants UaExpert ---");
-            
+
             // Test ENERGY_2 avec le bon identifiant
             if (machine.getName().contains("ENERGIE 2")) {
                 LogLevelManager.logDebug(COMPONENT_NAME, "Test spécifique ENERGY_2 détecté");
-                
+
                 String testResult = opcDriver.testSpecificNodeId("|var|ENERGY_2.Application.GVL.DMG[6].phase_voltage.a");
-                LogLevelManager.logInfo(COMPONENT_NAME, "Test ENERGY_2 phase_voltage.a: " + 
-                                     (testResult.contains("✅ SUCCÈS") ? "RÉUSSI" : "ÉCHOUÉ"));
+                LogLevelManager.logInfo(COMPONENT_NAME, "Test ENERGY_2 phase_voltage.a: "
+                        + (testResult.contains("✅ SUCCÈS") ? "RÉUSSI" : "ÉCHOUÉ"));
                 LogLevelManager.logTrace(COMPONENT_NAME, "Détail test ENERGY_2 phase_voltage.a:\n" + testResult);
-                
+
                 // Test avec frequency aussi
                 String testResult2 = opcDriver.testSpecificNodeId("|var|ENERGY_2.Application.GVL.DMG[6].frequency");
-                LogLevelManager.logInfo(COMPONENT_NAME, "Test ENERGY_2 frequency: " + 
-                                     (testResult2.contains("✅ SUCCÈS") ? "RÉUSSI" : "ÉCHOUÉ"));
+                LogLevelManager.logInfo(COMPONENT_NAME, "Test ENERGY_2 frequency: "
+                        + (testResult2.contains("✅ SUCCÈS") ? "RÉUSSI" : "ÉCHOUÉ"));
                 LogLevelManager.logTrace(COMPONENT_NAME, "Détail test ENERGY_2 frequency:\n" + testResult2);
             }
-            
+
             // Test ENERGY_1 - À CORRIGER avec le vrai identifiant UaExpert
             if (machine.getName().contains("ENERGIE 1")) {
                 LogLevelManager.logDebug(COMPONENT_NAME, "Test spécifique ENERGY_1 détecté");
-                
+
                 // Test plusieurs variantes possibles pour ENERGY_1
                 String[] energy1Tests = {
                     "|var|ENERGY_1.Application.GVL.tfos[0].stdset.frequency.value",
                     "|var|ENERGY_1.Application.GlobalVars.GVL.tfos[0].stdset.frequency.value",
                     "|appo|ENERGY_1.Application.GVL.tfos[0].stdset.frequency.value"
                 };
-                
+
                 boolean foundWorking = false;
                 for (String testId : energy1Tests) {
                     LogLevelManager.logDebug(COMPONENT_NAME, "Test ENERGY_1 avec identifiant: " + testId);
-                    
+
                     String testResult = opcDriver.testSpecificNodeId(testId);
                     boolean success = testResult.contains("✅ SUCCÈS");
-                    
-                    LogLevelManager.logInfo(COMPONENT_NAME, "Test ENERGY_1 (" + testId + "): " + 
-                                         (success ? "RÉUSSI" : "ÉCHOUÉ"));
+
+                    LogLevelManager.logInfo(COMPONENT_NAME, "Test ENERGY_1 (" + testId + "): "
+                            + (success ? "RÉUSSI" : "ÉCHOUÉ"));
                     LogLevelManager.logTrace(COMPONENT_NAME, "Détail test:\n" + testResult);
-                    
+
                     if (success) {
                         LogLevelManager.logInfo(COMPONENT_NAME, "🎉 IDENTIFIANT CORRECT TROUVÉ POUR ENERGY_1: " + testId);
                         foundWorking = true;
                         break;
                     }
                 }
-                
+
                 if (!foundWorking) {
                     LogLevelManager.logError(COMPONENT_NAME, "❌ Aucun identifiant fonctionnel trouvé pour ENERGY_1");
                 }
             }
-            
+
             LogLevelManager.logInfo(COMPONENT_NAME, "=== FIN DIAGNOSTIC OPC UA ===");
-            
+
         } catch (Exception e) {
             LogLevelManager.logError(COMPONENT_NAME, "Erreur lors du diagnostic OPC UA pour " + machine.getName() + ": " + e.getMessage());
             e.printStackTrace();
@@ -255,26 +266,26 @@ public class MachineCollector implements Runnable {
         synchronized (this) {
             int oldTagCount = this.machine.getTags() != null ? this.machine.getTags().size() : 0;
             int newTagCount = updatedMachine.getTags() != null ? updatedMachine.getTags().size() : 0;
-            
-            LogLevelManager.logInfo(COMPONENT_NAME, "Mise à jour machine " + machine.getName() + 
-                                 " - Tags: " + oldTagCount + " → " + newTagCount);
-            
+
+            LogLevelManager.logInfo(COMPONENT_NAME, "Mise à jour machine " + machine.getName()
+                    + " - Tags: " + oldTagCount + " → " + newTagCount);
+
             this.machine = updatedMachine;
             // Après la mise à jour des tags, recalculer l'intervalle de collecte
-            recalculateCollectionInterval(); 
-            
+            recalculateCollectionInterval();
+
             if (newTagCount > oldTagCount) {
-                LogLevelManager.logInfo(COMPONENT_NAME, (newTagCount - oldTagCount) + 
-                                     " nouveaux tags détectés pour " + machine.getName());
+                LogLevelManager.logInfo(COMPONENT_NAME, (newTagCount - oldTagCount)
+                        + " nouveaux tags détectés pour " + machine.getName());
             } else if (newTagCount < oldTagCount) {
-                LogLevelManager.logInfo(COMPONENT_NAME, (oldTagCount - newTagCount) + 
-                                     " tags supprimés pour " + machine.getName());
+                LogLevelManager.logInfo(COMPONENT_NAME, (oldTagCount - newTagCount)
+                        + " tags supprimés pour " + machine.getName());
             } else {
                 LogLevelManager.logDebug(COMPONENT_NAME, "Nombre de tags inchangé pour " + machine.getName());
             }
         }
     }
-    
+
     /**
      * Obtient le nombre actuel de tags
      */
@@ -308,21 +319,31 @@ public class MachineCollector implements Runnable {
     private void updateStatus(String status) {
         String oldStatus = this.currentStatus;
         this.currentStatus = status;
-        
+
         if (!status.equals(oldStatus)) {
-            LogLevelManager.logDebug(COMPONENT_NAME, "Changement statut pour " + machine.getName() + 
-                                 ": " + oldStatus + " → " + status);
+            LogLevelManager.logDebug(COMPONENT_NAME, "Changement statut pour " + machine.getName()
+                    + ": " + oldStatus + " → " + status);
         }
     }
-    
+
+    public LocalDateTime getConnectedSince() {
+        return connectedSince;
+    }
+
+    public int getConnectionCount() {
+        return connectionCount;
+    }
+
     /**
      * Méthode utilitaire pour obtenir le type de driver
      */
     private String getDriverType() {
-        if (driver == null) return "UNKNOWN";
-        
+        if (driver == null) {
+            return "UNKNOWN";
+        }
+
         String className = driver.getClass().getSimpleName();
-        
+
         if (className.contains("OpcUa")) {
             return "OPC-UA";
         } else if (className.contains("Siemens")) {
@@ -333,7 +354,7 @@ public class MachineCollector implements Runnable {
             return className;
         }
     }
-    
+
     /**
      * Méthode pour obtenir des informations de diagnostic
      */
@@ -348,33 +369,33 @@ public class MachineCollector implements Runnable {
         info.append("Tags configurés: ").append(getCurrentTagCount()).append("\n");
         info.append("Driver connecté: ").append(driver != null ? driver.isConnected() : "N/A").append("\n");
         info.append("Intervalle de collecte effectif: ").append(effectiveCollectionInterval / 1000).append("s\n"); // Ajouté
-        
+
         // Informations sur la machine
         if (machine != null) {
             info.append("\n=== Configuration Machine ===\n");
             info.append("Adresse: ").append(machine.getAddress()).append("\n");
             info.append("Port: ").append(machine.getPort()).append("\n");
-            
+
             if (machine.getRack() != null || machine.getSlot() != null) {
                 info.append("Rack/Slot: ").append(machine.getRack()).append("/").append(machine.getSlot()).append("\n");
             }
-            
+
             if (machine.getBus() != null) {
                 info.append("Bus/Unit ID: ").append(machine.getBus()).append("\n");
             }
         }
-        
+
         LogLevelManager.logDebug(COMPONENT_NAME, "Diagnostic généré pour " + machine.getName());
         return info.toString();
     }
-    
+
     /**
      * Réinitialise les compteurs
      */
     public void resetCounters() {
         long oldCount = tagsReadCount;
         tagsReadCount = 0;
-        LogLevelManager.logInfo(COMPONENT_NAME, "Compteurs réinitialisés pour " + machine.getName() + 
-                             " (ancien total: " + oldCount + ")");
+        LogLevelManager.logInfo(COMPONENT_NAME, "Compteurs réinitialisés pour " + machine.getName()
+                + " (ancien total: " + oldCount + ")");
     }
 }
