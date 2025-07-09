@@ -169,8 +169,9 @@ public class KafkaConsumerService implements Runnable {
 
                 // Mise à jour de la valeur du tag
                 updateTagValue(tag, data.value());
-                // CORRECTION : Utiliser le timestamp de la donnée, et non "now()".
-                // On le stocke en UTC pour être cohérent.
+                // CORRECTION : On convertit le timestamp (long) du message Kafka,
+                // qui est en UTC, en un objet Instant, puis en LocalDateTime UTC.
+                // Cela garantit que vStamp est cohérent avec created et changed.
                 Instant dataInstant = Instant.ofEpochMilli(data.timestamp());
                 tag.setvStamp(LocalDateTime.ofInstant(dataInstant, ZoneOffset.UTC));
 

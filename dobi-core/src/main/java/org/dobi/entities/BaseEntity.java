@@ -21,7 +21,6 @@ public abstract class BaseEntity {
     @Column(columnDefinition = "datetime default getdate()")
     private LocalDateTime changed;
 
-    
     // Getters and Setters
     public Long getId() {
         return id;
@@ -55,15 +54,21 @@ public abstract class BaseEntity {
         this.changed = changed;
     }
 
+    /**
+     * CORRECTION MAJEURE : Utilise Instant.now() pour obtenir un point temporel
+     * absolu en UTC. Ensuite, le convertit en LocalDateTime pour le stockage,
+     * en spécifiant explicitement que ce LocalDateTime représente une heure
+     * UTC. Cela élimine toute ambiguïté liée au fuseau horaire du serveur.
+     */
     @PrePersist
     protected void onCreate() {
         LocalDateTime nowUtc = LocalDateTime.ofInstant(Instant.now(), ZoneOffset.UTC);
-        created = nowUtc;
-        changed = nowUtc;
+        this.created = nowUtc;
+        this.changed = nowUtc;
     }
 
     @PreUpdate
     protected void onUpdate() {
-        changed = LocalDateTime.ofInstant(Instant.now(), ZoneOffset.UTC);
+        this.changed = LocalDateTime.ofInstant(Instant.now(), ZoneOffset.UTC);
     }
 }
