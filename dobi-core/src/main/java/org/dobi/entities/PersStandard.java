@@ -4,6 +4,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 import jakarta.persistence.Column;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 @Entity
 @Table(name = "pers_standard")
@@ -19,10 +20,15 @@ public class PersStandard extends BaseEntity {
     private Integer vInt;
     private Boolean vBool;
     private String vStr;
-    private LocalDateTime vDateTime;
+    // Tous les champs de date sont maintenant en OffsetDateTime
+    private OffsetDateTime vDateTime;
     
     @Column(nullable = false)
-    private LocalDateTime vStamp;
+    private OffsetDateTime vStamp;
+
+    // AJOUT : Les champs manquants sont ajoutés pour que JPA les gère
+    private OffsetDateTime stampStart;
+    private OffsetDateTime stampEnd;
     
     // Getters and Setters
     public Long getTag() { return tag; }
@@ -35,11 +41,14 @@ public class PersStandard extends BaseEntity {
     public void setvBool(Boolean vBool) { this.vBool = vBool; }
     public String getvStr() { return vStr; }
     public void setvStr(String vStr) { this.vStr = vStr; }
-    public LocalDateTime getvDateTime() { return vDateTime; }
-    public void setvDateTime(LocalDateTime vDateTime) { this.vDateTime = vDateTime; }
-    public LocalDateTime getvStamp() { return vStamp; }
-    public void setvStamp(LocalDateTime vStamp) { this.vStamp = vStamp; }
-
+    public OffsetDateTime getvDateTime() { return vDateTime; }
+    public void setvDateTime(OffsetDateTime vDateTime) { this.vDateTime = vDateTime; }
+    public OffsetDateTime getvStamp() { return vStamp; }
+    public void setvStamp(OffsetDateTime vStamp) { this.vStamp = vStamp; }
+    public OffsetDateTime getStampStart() { return stampStart; }
+    public void setStampStart(OffsetDateTime stampStart) { this.stampStart = stampStart; }
+    public OffsetDateTime getStampEnd() { return stampEnd; }
+    public void setStampEnd(OffsetDateTime stampEnd) { this.stampEnd = stampEnd; }
 
     public Integer getCompany() { return company; }
     public void setCompany(Integer company) { this.company = company; }

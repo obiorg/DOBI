@@ -3,6 +3,7 @@ package org.dobi.entities;
 import jakarta.persistence.*;
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 
 @MappedSuperclass
@@ -15,11 +16,11 @@ public abstract class BaseEntity {
     @Column(columnDefinition = "bit default 0")
     private boolean deleted;
 
-    @Column(updatable = false, columnDefinition = "datetime default getdate()")
-    private LocalDateTime created;
+    @Column(updatable = false)
+    private OffsetDateTime created;
 
-    @Column(columnDefinition = "datetime default getdate()")
-    private LocalDateTime changed;
+    @Column
+    private OffsetDateTime changed;
 
     // Getters and Setters
     public Long getId() {
@@ -38,19 +39,20 @@ public abstract class BaseEntity {
         this.deleted = deleted;
     }
 
-    public LocalDateTime getCreated() {
+    // Getters et Setters pour les nouveaux types
+    public OffsetDateTime getCreated() {
         return created;
     }
 
-    public void setCreated(LocalDateTime created) {
+    public void setCreated(OffsetDateTime created) {
         this.created = created;
     }
 
-    public LocalDateTime getChanged() {
+    public OffsetDateTime getChanged() {
         return changed;
     }
 
-    public void setChanged(LocalDateTime changed) {
+    public void setChanged(OffsetDateTime changed) {
         this.changed = changed;
     }
 
@@ -62,13 +64,13 @@ public abstract class BaseEntity {
      */
     @PrePersist
     protected void onCreate() {
-        LocalDateTime nowUtc = LocalDateTime.ofInstant(Instant.now(), ZoneOffset.UTC);
-        this.created = nowUtc;
-        this.changed = nowUtc;
+        // On force l'utilisation de l'heure UTC
+        this.created = OffsetDateTime.now(ZoneOffset.UTC);
+        this.changed = OffsetDateTime.now(ZoneOffset.UTC);
     }
 
     @PreUpdate
     protected void onUpdate() {
-        this.changed = LocalDateTime.ofInstant(Instant.now(), ZoneOffset.UTC);
+        this.changed = OffsetDateTime.now(ZoneOffset.UTC);
     }
 }

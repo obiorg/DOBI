@@ -2,6 +2,7 @@ package org.dobi.entities;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 @Entity
 @Table(name = "tags")
@@ -20,8 +21,8 @@ public class Tag extends BaseEntity {
     private Integer vInt;
     private Boolean vBool;
     private String vStr;
-    private LocalDateTime vDateTime;
-    private LocalDateTime vStamp;
+    private OffsetDateTime vDateTime;
+    private OffsetDateTime vStamp;
     
     // Dans Tag.java, ajouter :
     @Column(name = "cycle")
@@ -69,10 +70,10 @@ public class Tag extends BaseEntity {
     public void setvBool(Boolean vBool) { this.vBool = vBool; }
     public String getvStr() { return vStr; }
     public void setvStr(String vStr) { this.vStr = vStr; }
-    public LocalDateTime getvDateTime() { return vDateTime; }
-    public void setvDateTime(LocalDateTime vDateTime) { this.vDateTime = vDateTime; }
-    public LocalDateTime getvStamp() { return vStamp; }
-    public void setvStamp(LocalDateTime vStamp) { this.vStamp = vStamp; }
+    public OffsetDateTime getvDateTime() { return vDateTime; }
+    public void setvDateTime(OffsetDateTime vDateTime) { this.vDateTime = vDateTime; }
+    public OffsetDateTime getvStamp() { return vStamp; }
+    public void setvStamp(OffsetDateTime vStamp) { this.vStamp = vStamp; }
     public Integer getOpcNamespaceIndex() { return opcNamespaceIndex; }
     public void setOpcNamespaceIndex(Integer opcNamespaceIndex) { this.opcNamespaceIndex = opcNamespaceIndex; }
     public String getOpcIdentifier() { return opcIdentifier; }

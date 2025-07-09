@@ -23,6 +23,7 @@ import org.dobi.services.alarm.AlarmEngineService; // <-- NOUVEL IMPORT
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.Collections;
@@ -169,12 +170,11 @@ public class KafkaConsumerService implements Runnable {
 
                 // Mise à jour de la valeur du tag
                 updateTagValue(tag, data.value());
-                // CORRECTION : On convertit le timestamp (long) du message Kafka,
-                // qui est en UTC, en un objet Instant, puis en LocalDateTime UTC.
-                // Cela garantit que vStamp est cohérent avec created et changed.
+                // On convertit le timestamp UTC du message en OffsetDateTime UTC
                 Instant dataInstant = Instant.ofEpochMilli(data.timestamp());
-                tag.setvStamp(LocalDateTime.ofInstant(dataInstant, ZoneOffset.UTC));
+                OffsetDateTime utcTimestamp = OffsetDateTime.ofInstant(dataInstant, ZoneOffset.UTC);
 
+                tag.setvStamp(utcTimestamp);
                 em.merge(tag);
 
                 LogLevelManager.logTrace(COMPONENT_NAME, "Tag mis à jour: " + tag.getName() + " = " + data.value());
@@ -214,7 +214,11 @@ public class KafkaConsumerService implements Runnable {
                             }
 
                             updateHistoryValue(history, data.value());
-                            history.setvStamp(LocalDateTime.ofInstant(Instant.ofEpochMilli(data.timestamp()), ZoneId.systemDefault()));
+                            history.setvStamp(utcTimestamp); // On utilise le même timestamp UTC
+                            // On initialise stampStart et stampEnd à la même valeur pour l'instant
+                            history.setStampStart(utcTimestamp);
+                            history.setStampEnd(null); // stampEnd sera mis à jour plus tard si nécessaire
+
                             em.persist(history);
 
                             LogLevelManager.logTrace(COMPONENT_NAME, "Entrée historique SQL Server créée pour tag: " + tag.getName());
