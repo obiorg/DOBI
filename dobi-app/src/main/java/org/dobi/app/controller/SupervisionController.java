@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
+import org.dobi.dto.MachineStateDto;
 
 @RestController
 @RequestMapping("/api/v1")
@@ -19,7 +20,6 @@ public class SupervisionController {
     public SupervisionController(SupervisionService supervisionService) {
         this.supervisionService = supervisionService;
     }
-
 
     @GetMapping("/status")
     public Map<String, String> getApiStatus() {
@@ -52,5 +52,11 @@ public class SupervisionController {
     @GetMapping("/tags/{id}/history")
     public List<org.dobi.dto.HistoryDataPointDto> getTagHistory(@PathVariable Long id, @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "100") int size) {
         return supervisionService.getTagHistory(id, page, size);
+    }
+
+    // AJOUTEZ CE NOUVEL ENDPOINT
+    @GetMapping("/machines/state")
+    public List<MachineStateDto> getAllMachineStates() {
+        return supervisionService.getAllMachineStates();
     }
 }
