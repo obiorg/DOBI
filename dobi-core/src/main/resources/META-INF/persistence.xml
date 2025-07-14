@@ -26,6 +26,9 @@
         <class>org.dobi.entities.AlarmClass</class>
         <class>org.dobi.entities.Alarm</class>
         <class>org.dobi.entities.ActiveAlarm</class>
+        
+        <!-- PWA - Push -->
+        <class>org.dobi.entities.PushSubscription</class>
 
         <properties>
             <property name="jakarta.persistence.jdbc.driver" value="com.microsoft.sqlserver.jdbc.SQLServerDriver"/>
