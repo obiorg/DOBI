@@ -41,8 +41,8 @@ public class SecurityConfig {
         configuration.setAllowedOrigins(Arrays.asList(
                 "http://localhost:3000",
                 "https://localhost:3000", // Pour le développement local sécurisé
-                "http://192.168.242.32:3000",
-                "https://192.168.242.32:3000"
+                "http://10.242.14.3:3000",
+                "https://10.242.14.3:3000"
         ));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("*"));

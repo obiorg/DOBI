@@ -28,8 +28,8 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
                 .setAllowedOrigins(
                         "http://localhost:3000",
                         "https://localhost:3000", // Pour le développement local sécurisé
-                        "http://192.168.242.32:3000",
-                        "https://192.168.242.32:3000"
+                        "http://10.242.14.3:3000",
+                        "https://10.242.14.3:3000"
                 )
                 .withSockJS();
         LogLevelManager.logInfo(COMPONENT_NAME, "Endpoint WebSocket STOMP enregistré: /ws-dobi.");
