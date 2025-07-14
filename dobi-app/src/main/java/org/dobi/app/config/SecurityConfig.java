@@ -18,17 +18,15 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            // Applique la configuration CORS définie ci-dessous
-            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-            
-            // Désactive la protection CSRF, cause de l'erreur 403
-            .csrf(csrf -> csrf.disable())
-            
-            // Autorise toutes les requêtes HTTP sans authentification
-            .authorizeHttpRequests(authz -> authz
+                // Applique la configuration CORS définie ci-dessous
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                // Désactive la protection CSRF, cause de l'erreur 403
+                .csrf(csrf -> csrf.disable())
+                // Autorise toutes les requêtes HTTP sans authentification
+                .authorizeHttpRequests(authz -> authz
                 .requestMatchers("/**").permitAll() // Autorise tout
                 .anyRequest().authenticated()
-            );
+                );
 
         return http.build();
     }
@@ -39,14 +37,19 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        // Autorise les requêtes depuis votre frontend Next.js
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000", "http://192.168.242.32:3000"));
+        // CORRECTION : Ajout des origines HTTPS
+        configuration.setAllowedOrigins(Arrays.asList(
+                "http://localhost:3000",
+                "https://localhost:3000", // Pour le développement local sécurisé
+                "http://192.168.242.32:3000",
+                "https://192.168.242.32:3000"
+        ));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setAllowCredentials(true);
-        
+
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration); // Applique cette configuration à toutes les routes
+        source.registerCorsConfiguration("/**", configuration);
         return source;
     }
 }
