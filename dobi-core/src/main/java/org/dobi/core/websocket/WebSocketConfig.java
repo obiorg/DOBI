@@ -29,7 +29,8 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
                         "http://localhost:3000",
                         "https://localhost:3000", // Pour le développement local sécurisé
                         "http://10.242.14.3:3000",
-                        "https://10.242.14.3:3000"
+                        "https://10.242.14.3:3000",
+                        "https://7ebee8cd7e67.ngrok-free.app"
                 )
                 .withSockJS();
         LogLevelManager.logInfo(COMPONENT_NAME, "Endpoint WebSocket STOMP enregistré: /ws-dobi.");

@@ -42,7 +42,8 @@ public class SecurityConfig {
                 "http://localhost:3000",
                 "https://localhost:3000", // Pour le développement local sécurisé
                 "http://10.242.14.3:3000",
-                "https://10.242.14.3:3000"
+                "https://10.242.14.3:3000",
+                "https://7ebee8cd7e67.ngrok-free.app"
         ));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
