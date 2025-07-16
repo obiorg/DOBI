@@ -1,6 +1,7 @@
 package org.dobi.core.websocket;
 
 import org.dobi.logging.LogLevelManager;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
@@ -12,6 +13,9 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     private static final String COMPONENT_NAME = "CORE-WEBSOCKET-CONFIG";
+    // Injection de la même valeur depuis application.properties
+    @Value("${dobi.cors.allowed-origins}")
+    private String[] allowedOrigins;
 
     @Override
     public void configureMessageBroker(MessageBrokerRegistry config) {
@@ -25,13 +29,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         // CORRIGÉ : On restaure la configuration des origines autorisées
         // spécifiquement pour l'endpoint SockJS. C'est crucial pour la poignée de main.
         registry.addEndpoint("/ws-dobi")
-                .setAllowedOrigins(
-                        "http://localhost:3000",
-                        "https://localhost:3000", // Pour le développement local sécurisé
-                        "http://10.242.14.3:3000",
-                        "https://10.242.14.3:3000",
-                        "https://7ebee8cd7e67.ngrok-free.app"
-                )
+                .setAllowedOrigins(allowedOrigins)
                 .withSockJS();
         LogLevelManager.logInfo(COMPONENT_NAME, "Endpoint WebSocket STOMP enregistré: /ws-dobi.");
     }
