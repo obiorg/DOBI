@@ -5,6 +5,7 @@ import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.NoResultException;
 import jakarta.persistence.TypedQuery;
 import org.dobi.core.ports.AlarmNotifier;
+import org.dobi.core.ports.PushNotifier;
 import org.dobi.dto.ActiveAlarmDto;
 import org.dobi.dto.TagData;
 import org.dobi.entities.*;
@@ -14,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+
 
 /**
  * Service central pour la logique de détection et de gestion des alarmes.
@@ -25,10 +27,12 @@ public class AlarmEngineService {
     private static final String COMPONENT_NAME = "ALARM-ENGINE";
     private final EntityManagerFactory emf;
     private final AlarmNotifier alarmNotifier;
+    private final PushNotifier pushNotifier;
 
-    public AlarmEngineService(EntityManagerFactory emf, AlarmNotifier alarmNotifier) {
+    public AlarmEngineService(EntityManagerFactory emf, AlarmNotifier alarmNotifier, PushNotifier pushNotifier) {
         this.emf = emf;
         this.alarmNotifier = alarmNotifier;
+        this.pushNotifier = pushNotifier; 
         LogLevelManager.logInfo(COMPONENT_NAME, "AlarmEngineService initialisé.");
     }
 
@@ -97,8 +101,16 @@ public class AlarmEngineService {
 
         em.persist(newAlarm);
         em.getTransaction().commit();
-
-        alarmNotifier.notifyAlarmUpdate(convertToDto(newAlarm));
+        
+        ActiveAlarmDto dto = convertToDto(newAlarm);
+        
+        // 1. Notifier le frontend via WebSocket (existant)
+        alarmNotifier.notifyAlarmUpdate(dto);
+        
+        // 2. NOUVEAU : Envoyer une notification push si l'alarme est critique
+        if ("CRITICAL_ALARM".equals(dto.severity())) {
+            pushNotifier.sendNotificationToAll(dto);
+        }
     }
 
     private void resolveActiveAlarm(EntityManager em, ActiveAlarm alarm) {
@@ -184,3 +196,4 @@ public class AlarmEngineService {
         );
     }
 }
+ 

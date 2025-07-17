@@ -4,6 +4,7 @@ import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.Persistence;
 import org.dobi.app.service.AlarmService;
 import org.dobi.core.ports.AlarmNotifier;
+import org.dobi.core.ports.PushNotifier;
 import org.dobi.core.websocket.TagWebSocketController;
 import org.dobi.influxdb.InfluxDBReaderService;
 import org.dobi.influxdb.InfluxDBWriterService;
@@ -109,8 +110,8 @@ public class DobiServiceConfiguration {
      * AlarmNotifier (qui est notre AlarmService).
      */
     @Bean
-    public AlarmEngineService alarmEngineService(EntityManagerFactory emf, AlarmNotifier alarmNotifier) {
-        return new AlarmEngineService(emf, alarmNotifier);
+    public AlarmEngineService alarmEngineService(EntityManagerFactory emf, AlarmNotifier alarmNotifier, PushNotifier pushNotifier) {
+        return new AlarmEngineService(emf, alarmNotifier, pushNotifier);
     }
 
     /**
