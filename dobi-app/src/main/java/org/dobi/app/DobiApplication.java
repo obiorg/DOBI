@@ -2,7 +2,8 @@ package org.dobi.app;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration; // <-- IMPORT NÉCESSAIRE
+import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration; 
+import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 /**
  * Classe principale de l'application DOBI.
@@ -14,7 +15,8 @@ import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration; 
  * MachineManagerService. Cette modification résout l'erreur "Failed to
  * configure a DataSource".
  */
-@SpringBootApplication(exclude = {DataSourceAutoConfiguration.class}) // <-- MODIFICATION ICI
+@SpringBootApplication(exclude = {DataSourceAutoConfiguration.class})
+@EnableJpaRepositories(basePackages = "org.dobi.app.repository")
 public class DobiApplication {
 
     public static void main(String[] args) {
