@@ -26,9 +26,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
  * entre eux.
  */
 @SpringBootApplication(exclude = {DataSourceAutoConfiguration.class})
-@ComponentScan(basePackages = "org.dobi") // Scanne tout le projet pour les beans
-@EntityScan(basePackages = "org.dobi.entities") // Indique où sont les entités
-@EnableJpaRepositories(basePackages = "org.dobi.app.repository") // Indique où sont les repositories
+@EnableJpaRepositories(basePackages = "org.dobi.app.repository")
 public class DobiApplication {
 
     public static void main(String[] args) {
