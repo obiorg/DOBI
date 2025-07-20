@@ -4,12 +4,14 @@ import org.dobi.app.security.JwtAuthFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.AuthenticationProvider; // <-- NOUVEL IMPORT
+import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -23,12 +25,12 @@ public class SecurityConfig {
 
     private final JwtAuthFilter jwtAuthFilter;
     private final CorsConfigurationSource corsConfigurationSource;
-    private final AuthenticationProvider authenticationProvider; // <-- NOUVELLE DÉPENDANCE
+    private final UserDetailsService userDetailsService;
 
-    public SecurityConfig(JwtAuthFilter jwtAuthFilter, CorsConfigurationSource corsConfigurationSource, AuthenticationProvider authenticationProvider) {
+    public SecurityConfig(JwtAuthFilter jwtAuthFilter, CorsConfigurationSource corsConfigurationSource, UserDetailsService userDetailsService) {
         this.jwtAuthFilter = jwtAuthFilter;
         this.corsConfigurationSource = corsConfigurationSource;
-        this.authenticationProvider = authenticationProvider; // <-- INJECTION
+        this.userDetailsService = userDetailsService;
     }
 
     @Bean
@@ -37,19 +39,35 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource))
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/v1/auth/**").permitAll() // On autorise tout ce qui est sous /auth
+                .requestMatchers("/api/v1/auth/**").permitAll()
                 .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authenticationProvider(authenticationProvider) // <-- ON DIT À SPRING D'UTILISER NOTRE PROVIDER
+                .authenticationProvider(authenticationProvider()) // Utilise le bean défini ci-dessous
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
 
+    /**
+     * Bean pour l'encodage des mots de passe.
+     */
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
+    }
+
+    /**
+     * Bean qui configure le fournisseur d'authentification. Il lie le service
+     * qui trouve les utilisateurs (UserDetailsService) avec l'outil qui vérifie
+     * les mots de passe (PasswordEncoder).
+     */
+    @Bean
+    public AuthenticationProvider authenticationProvider() {
+        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
+        authProvider.setUserDetailsService(userDetailsService);
+        authProvider.setPasswordEncoder(passwordEncoder()); // Utilise le bean défini ci-dessus
+        return authProvider;
     }
 
     @Bean
