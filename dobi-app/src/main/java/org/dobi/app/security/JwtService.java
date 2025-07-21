@@ -34,8 +34,8 @@ public class JwtService {
 
     public String generateToken(UserDetails userDetails) {
         Map<String, Object> extraClaims = new HashMap<>();
-        // CORRECTION : Ajout des rôles de l'utilisateur dans le token JWT
-        // Cela permettra au frontend de connaître les permissions de l'utilisateur.
+        // CORRECTION : Ajout des rôles de l'utilisateur dans le "payload" du token JWT.
+        // C'est cette partie qui permet au frontend de connaître les permissions.
         extraClaims.put("roles", userDetails.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.toList()));
