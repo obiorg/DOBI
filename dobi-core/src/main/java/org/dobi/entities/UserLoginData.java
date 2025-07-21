@@ -1,7 +1,6 @@
 package org.dobi.entities;
 
 import jakarta.persistence.*;
-import java.time.OffsetDateTime;
 
 @Entity
 @Table(name = "user_login_data")
@@ -13,18 +12,15 @@ public class UserLoginData extends BaseEntity {
     @Column(name = "passwordHash", nullable = false)
     private String passwordHash;
 
-    // Note : Le sel est souvent inclus dans le hash avec les encodeurs modernes (ex: BCrypt)
-    // Ce champ est conservé pour correspondre au schéma existant.
     @Column(name = "passwordSalt")
     private String passwordSalt;
 
     @Column(name = "email", nullable = false, unique = true)
     private String email;
 
-    // Relation vers le compte utilisateur principal
+    // CORRECTION : Relation One-to-One standard via une colonne de jointure
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id") // Suppose une relation 1-1 sur la même clé primaire
-    @MapsId
+    @JoinColumn(name = "user_account_id", referencedColumnName = "id")
     private UserAccount userAccount;
 
     // Getters and Setters...

@@ -13,14 +13,13 @@ public class UserAccount extends BaseEntity {
     @Column(name = "lastName", nullable = false)
     private String lastName;
 
+    // CORRECTION : La relation inverse est maintenant correcte
     @OneToOne(mappedBy = "userAccount", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private UserLoginData loginData;
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
         name = "user_account_role",
-        // CORRECTION : On entoure le nom de la colonne "user" de crochets
-        // pour indiquer à JPA/Hibernate qu'il s'agit d'un identifiant et non d'un mot-clé SQL.
         joinColumns = @JoinColumn(name = "[user]"),
         inverseJoinColumns = @JoinColumn(name = "role")
     )
@@ -32,7 +31,13 @@ public class UserAccount extends BaseEntity {
     public String getLastName() { return lastName; }
     public void setLastName(String lastName) { this.lastName = lastName; }
     public UserLoginData getLoginData() { return loginData; }
-    public void setLoginData(UserLoginData loginData) { this.loginData = loginData; }
+    public void setLoginData(UserLoginData loginData) {
+        // Assure la cohérence de la relation bidirectionnelle
+        if (loginData != null) {
+            loginData.setUserAccount(this);
+        }
+        this.loginData = loginData;
+    }
     public Set<UserRole> getRoles() { return roles; }
     public void setRoles(Set<UserRole> roles) { this.roles = roles; }
 }
