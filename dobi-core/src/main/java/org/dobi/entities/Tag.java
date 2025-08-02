@@ -31,6 +31,9 @@ public class Tag extends BaseEntity {
     @Column(name = "persistenceEnable") 
     private Boolean persistenceEnable = false;
 
+    @Column(name = "persOffsetEnable")
+    private Boolean persOffsetEnable;
+
 
     @Column(name = "opc_namespace_index")
     private Integer opcNamespaceIndex;
@@ -92,4 +95,7 @@ public class Tag extends BaseEntity {
     public Boolean getPersistenceEnable() {    return persistenceEnable;    }
     public void setPersistenceEnable(Boolean persistenceEnable) {    this.persistenceEnable = persistenceEnable;}
     
+    
+    public Boolean getPersOffsetEnable() { return persOffsetEnable; }
+    public void setPersOffsetEnable(Boolean persOffsetEnable) { this.persOffsetEnable = persOffsetEnable; }
 }
