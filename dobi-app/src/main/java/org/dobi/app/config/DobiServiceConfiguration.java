@@ -12,7 +12,13 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Configuration
-@ComponentScan(basePackages = {"org.dobi.services", "org.dobi.manager", "org.dobi.kafka", "org.dobi.influxdb"})
+@ComponentScan(basePackages = {
+    "org.dobi.services", // Pour AlarmEngineService
+    "org.dobi.manager", // Pour MachineManagerService  
+    "org.dobi.kafka", // Pour KafkaManagerService
+    "org.dobi.influxdb", // Pour les services InfluxDB
+    "org.dobi.core.websocket" // Pour TagWebSocketController
+})
 public class DobiServiceConfiguration {
 
     private final UserDetailsServiceImpl userDetailsService;

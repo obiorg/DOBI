@@ -2,6 +2,7 @@ package org.dobi.manager;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.Persistence;
 import org.dobi.api.IDriver;
 import org.dobi.dto.MachineStatusDto;
 import org.dobi.entities.Machine;
@@ -10,7 +11,6 @@ import org.dobi.profinet.ProfinetDriver;
 import org.dobi.profinet.diagnostic.AlarmHandler;
 import org.dobi.profinet.diagnostic.AlarmHandler.ProfinetAlarm;
 import org.dobi.logging.LogLevelManager;
-import org.springframework.stereotype.Service; // <-- AJOUT IMPORTANT
 
 import java.io.InputStream;
 import java.util.*;
@@ -19,7 +19,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-@Service // <-- CETTE LIGNE EST LA SOLUTION
+
 public class MachineManagerService {
 
     private static final String COMPONENT_NAME = "MACHINE-MANAGER";
@@ -1039,11 +1039,6 @@ public class MachineManagerService {
         return alarmHandlers;
     }
 
-    /**
-     * Obtient des statistiques globales sur les alarmes Profinet
-     *
-     * @return Map contenant les statistiques
-     */
     /**
      * Obtient des statistiques globales sur les alarmes Profinet
      *
