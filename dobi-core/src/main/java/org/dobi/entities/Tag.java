@@ -28,11 +28,11 @@ public class Tag extends BaseEntity {
     @Column(name = "cycle")
     private Integer cycle; // Fréquence en secondes
 
-    // CORRECTION : Ajout de l'annotation @Column pour correspondre au nom exact dans la base de données
-    @Column(name = "persistenceEnable")
+
+    @Column(name = "persistence_enable")
     private Boolean persistenceEnable;
 
-    @Column(name = "persOffsetEnable")
+    @Column(name = "pers_offset_enable")
     private Boolean persOffsetEnable;
 
     @Column(name = "opc_namespace_index")
