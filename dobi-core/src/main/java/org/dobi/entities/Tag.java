@@ -23,17 +23,17 @@ public class Tag extends BaseEntity {
     private String vStr;
     private OffsetDateTime vDateTime;
     private OffsetDateTime vStamp;
-    
+
     // Dans Tag.java, ajouter :
     @Column(name = "cycle")
     private Integer cycle; // Fréquence en secondes
 
-    @Column(name = "persistenceEnable") 
-    private Boolean persistenceEnable = false;
+    // CORRECTION : Ajout de l'annotation @Column pour correspondre au nom exact dans la base de données
+    @Column(name = "persistenceEnable")
+    private Boolean persistenceEnable;
 
     @Column(name = "persOffsetEnable")
     private Boolean persOffsetEnable;
-
 
     @Column(name = "opc_namespace_index")
     private Integer opcNamespaceIndex;
@@ -45,7 +45,7 @@ public class Tag extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "machine", nullable = false)
     private Machine machine;
-    
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "type", nullable = false)
     private TagType type;
@@ -55,47 +55,163 @@ public class Tag extends BaseEntity {
     private TagMemory memory;
 
     // Getters & Setters
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
-    public Integer getDbNumber() { return dbNumber; }
-    public void setDbNumber(Integer dbNumber) { this.dbNumber = dbNumber; }
-    public Integer getByteAddress() { return byteAddress; }
-    public void setByteAddress(Integer byteAddress) { this.byteAddress = byteAddress; }
-    public Integer getBitAddress() { return bitAddress; }
-    public void setBitAddress(Integer bitAddress) { this.bitAddress = bitAddress; }
-    public boolean isActive() { return active; }
-    public void setActive(boolean active) { this.active = active; }
-    public Float getvFloat() { return vFloat; }
-    public void setvFloat(Float vFloat) { this.vFloat = vFloat; }
-    public Integer getvInt() { return vInt; }
-    public void setvInt(Integer vInt) { this.vInt = vInt; }
-    public Boolean getvBool() { return vBool; }
-    public void setvBool(Boolean vBool) { this.vBool = vBool; }
-    public String getvStr() { return vStr; }
-    public void setvStr(String vStr) { this.vStr = vStr; }
-    public OffsetDateTime getvDateTime() { return vDateTime; }
-    public void setvDateTime(OffsetDateTime vDateTime) { this.vDateTime = vDateTime; }
-    public OffsetDateTime getvStamp() { return vStamp; }
-    public void setvStamp(OffsetDateTime vStamp) { this.vStamp = vStamp; }
-    public Integer getOpcNamespaceIndex() { return opcNamespaceIndex; }
-    public void setOpcNamespaceIndex(Integer opcNamespaceIndex) { this.opcNamespaceIndex = opcNamespaceIndex; }
-    public String getOpcIdentifier() { return opcIdentifier; }
-    public void setOpcIdentifier(String opcIdentifier) { this.opcIdentifier = opcIdentifier; }
-    public String getOpcIdentifierType() { return opcIdentifierType; }
-    public void setOpcIdentifierType(String opcIdentifierType) { this.opcIdentifierType = opcIdentifierType; }
-    public Machine getMachine() { return machine; }
-    public void setMachine(Machine machine) { this.machine = machine; }
-    public TagType getType() { return type; }
-    public void setType(TagType type) { this.type = type; }
-    public TagMemory getMemory() { return memory; }
-    public void setMemory(TagMemory memory) { this.memory = memory; }
+    public String getName() {
+        return name;
+    }
 
-    public Integer getCycle() {     return cycle;   }
-    public void setCycle(Integer cycle) {     this.cycle = cycle;    }
-    public Boolean getPersistenceEnable() {    return persistenceEnable;    }
-    public void setPersistenceEnable(Boolean persistenceEnable) {    this.persistenceEnable = persistenceEnable;}
-    
-    
-    public Boolean getPersOffsetEnable() { return persOffsetEnable; }
-    public void setPersOffsetEnable(Boolean persOffsetEnable) { this.persOffsetEnable = persOffsetEnable; }
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public Integer getDbNumber() {
+        return dbNumber;
+    }
+
+    public void setDbNumber(Integer dbNumber) {
+        this.dbNumber = dbNumber;
+    }
+
+    public Integer getByteAddress() {
+        return byteAddress;
+    }
+
+    public void setByteAddress(Integer byteAddress) {
+        this.byteAddress = byteAddress;
+    }
+
+    public Integer getBitAddress() {
+        return bitAddress;
+    }
+
+    public void setBitAddress(Integer bitAddress) {
+        this.bitAddress = bitAddress;
+    }
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
+    }
+
+    public Float getvFloat() {
+        return vFloat;
+    }
+
+    public void setvFloat(Float vFloat) {
+        this.vFloat = vFloat;
+    }
+
+    public Integer getvInt() {
+        return vInt;
+    }
+
+    public void setvInt(Integer vInt) {
+        this.vInt = vInt;
+    }
+
+    public Boolean getvBool() {
+        return vBool;
+    }
+
+    public void setvBool(Boolean vBool) {
+        this.vBool = vBool;
+    }
+
+    public String getvStr() {
+        return vStr;
+    }
+
+    public void setvStr(String vStr) {
+        this.vStr = vStr;
+    }
+
+    public OffsetDateTime getvDateTime() {
+        return vDateTime;
+    }
+
+    public void setvDateTime(OffsetDateTime vDateTime) {
+        this.vDateTime = vDateTime;
+    }
+
+    public OffsetDateTime getvStamp() {
+        return vStamp;
+    }
+
+    public void setvStamp(OffsetDateTime vStamp) {
+        this.vStamp = vStamp;
+    }
+
+    public Integer getOpcNamespaceIndex() {
+        return opcNamespaceIndex;
+    }
+
+    public void setOpcNamespaceIndex(Integer opcNamespaceIndex) {
+        this.opcNamespaceIndex = opcNamespaceIndex;
+    }
+
+    public String getOpcIdentifier() {
+        return opcIdentifier;
+    }
+
+    public void setOpcIdentifier(String opcIdentifier) {
+        this.opcIdentifier = opcIdentifier;
+    }
+
+    public String getOpcIdentifierType() {
+        return opcIdentifierType;
+    }
+
+    public void setOpcIdentifierType(String opcIdentifierType) {
+        this.opcIdentifierType = opcIdentifierType;
+    }
+
+    public Machine getMachine() {
+        return machine;
+    }
+
+    public void setMachine(Machine machine) {
+        this.machine = machine;
+    }
+
+    public TagType getType() {
+        return type;
+    }
+
+    public void setType(TagType type) {
+        this.type = type;
+    }
+
+    public TagMemory getMemory() {
+        return memory;
+    }
+
+    public void setMemory(TagMemory memory) {
+        this.memory = memory;
+    }
+
+    public Integer getCycle() {
+        return cycle;
+    }
+
+    public void setCycle(Integer cycle) {
+        this.cycle = cycle;
+    }
+
+    public Boolean getPersistenceEnable() {
+        return persistenceEnable;
+    }
+
+    public void setPersistenceEnable(Boolean persistenceEnable) {
+        this.persistenceEnable = persistenceEnable;
+    }
+
+    public Boolean getPersOffsetEnable() {
+        return persOffsetEnable;
+    }
+
+    public void setPersOffsetEnable(Boolean persOffsetEnable) {
+        this.persOffsetEnable = persOffsetEnable;
+    }
 }
