@@ -32,37 +32,29 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(AbstractHttpConfigurer::disable) // Désactiver CSRF pour les API stateless
-                .cors(cors -> cors.configurationSource(corsConfigurationSource())) // Appliquer la configuration CORS
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/**", "/ws/**", "/health", "/swagger-ui/**", "/v3/api-docs/**").permitAll() // Autoriser les endpoints publics
-                .anyRequest().authenticated() // Sécuriser tous les autres endpoints
+                // CORRECTION : Ajout de "/v1/" pour correspondre à l'URL du AuthController
+                .requestMatchers("/api/v1/auth/**", "/ws/**", "/health", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                .anyRequest().authenticated()
                 )
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Pas de session côté serveur
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authenticationProvider)
-                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class); // Ajouter le filtre JWT
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
 
-    /**
-     * Bean de configuration CORS. C'est ici que nous autorisons le frontend à
-     * communiquer avec le backend.
-     */
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        // Autorise les requêtes provenant de votre frontend Next.js
-        configuration.setAllowedOrigins(Arrays.asList("https://localhost:3000", "http://localhost:3000"));
-        // Autorise les méthodes HTTP communes
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        // Autorise tous les en-têtes
+        configuration.setAllowedOriginPatterns(Arrays.asList("http://localhost:3000", "https://localhost:3000", "http://10.242.14.3:3000"));
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD"));
         configuration.setAllowedHeaders(List.of("*"));
-        // Autorise l'envoi de cookies et d'en-têtes d'authentification
         configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        // Applique cette configuration à toutes les routes de l'application
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }
