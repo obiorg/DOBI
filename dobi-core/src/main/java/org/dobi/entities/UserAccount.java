@@ -1,6 +1,7 @@
 package org.dobi.entities;
 
 import jakarta.persistence.*;
+import java.time.LocalDate;
 import java.util.Set;
 
 @Entity
@@ -12,6 +13,12 @@ public class UserAccount extends BaseEntity {
 
     @Column(name = "lastName", nullable = false)
     private String lastName;
+    
+    @Column(name = "genre", nullable = false)
+    private String genre;
+    
+    @Column(name = "dateOfBirth", nullable = false)
+    private LocalDate dateOfBirth;
 
     // CORRECTION : La relation inverse est maintenant correcte
     @OneToOne(mappedBy = "userAccount", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
@@ -40,4 +47,14 @@ public class UserAccount extends BaseEntity {
     }
     public Set<UserRole> getRoles() { return roles; }
     public void setRoles(Set<UserRole> roles) { this.roles = roles; }
+
+    public String getGenre() {        return genre;    }
+
+    public void setGenre(String genre) {        this.genre = genre;    }
+
+    public LocalDate getDateOfBirth() {        return dateOfBirth;    }
+
+    public void setDateOfBirth(LocalDate dateOfBirth) {        this.dateOfBirth = dateOfBirth;    }
+    
+    
 }

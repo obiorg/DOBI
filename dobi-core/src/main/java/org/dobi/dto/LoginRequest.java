@@ -1,3 +1,5 @@
 package org.dobi.dto;
 
-public record LoginRequest(String username, String password) {}
+public record LoginRequest(String loginName, String password) {
+
+}

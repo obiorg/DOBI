@@ -35,8 +35,8 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                // CORRECTION : Ajout de "/v1/" pour correspondre à l'URL du AuthController
-                .requestMatchers("/api/v1/auth/**", "/ws/**", "/health", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                // AJOUT TEMPORAIRE : Autoriser la création d'utilisateur
+                .requestMatchers("/api/v1/auth/**", "/api/v1/admin/**", "/ws/**", "/health").permitAll()
                 .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
