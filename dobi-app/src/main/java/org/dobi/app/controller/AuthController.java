@@ -30,24 +30,24 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest request) {
         try {
-            LogLevelManager.logInfo(COMPONENT_NAME, "Tentative d'authentification pour l'utilisateur: " + request.username());
+            LogLevelManager.logInfo(COMPONENT_NAME, "Tentative d'authentification pour l'utilisateur: " + request.loginName());
             authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(request.username(), request.password())
+                    new UsernamePasswordAuthenticationToken(request.loginName(), request.password())
             );
-            LogLevelManager.logInfo(COMPONENT_NAME, "Authentification réussie pour : " + request.username());
+            LogLevelManager.logInfo(COMPONENT_NAME, "Authentification réussie pour : " + request.loginName());
 
-            final UserDetails userDetails = userDetailsService.loadUserByUsername(request.username());
+            final UserDetails userDetails = userDetailsService.loadUserByUsername(request.loginName());
             final String jwt = jwtService.generateToken(userDetails);
-            
-            LogLevelManager.logInfo(COMPONENT_NAME, "Token JWT généré pour : " + request.username());
+
+            LogLevelManager.logInfo(COMPONENT_NAME, "Token JWT généré pour : " + request.loginName());
             return ResponseEntity.ok(new LoginResponse(jwt));
 
         } catch (BadCredentialsException e) {
-            LogLevelManager.logError(COMPONENT_NAME, "Échec de l'authentification : Identifiants incorrects pour " + request.username());
+            LogLevelManager.logError(COMPONENT_NAME, "Échec de l'authentification : Identifiants incorrects pour " + request.loginName());
             // On retourne une erreur 401 (Unauthorized) qui est plus sémantique qu'une 403 pour un login échoué.
             return ResponseEntity.status(401).body("Identifiants incorrects");
         } catch (Exception e) {
-            LogLevelManager.logError(COMPONENT_NAME, "Erreur inattendue lors de la connexion pour " + request.username() + ": " + e.getMessage());
+            LogLevelManager.logError(COMPONENT_NAME, "Erreur inattendue lors de la connexion pour " + request.loginName() + ": " + e.getMessage());
             return ResponseEntity.status(500).body("Erreur interne du serveur");
         }
     }
