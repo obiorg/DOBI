@@ -3,7 +3,7 @@ package org.dobi.app.config;
 import org.dobi.app.security.JwtAuthFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod; // Import nécessaire
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -16,6 +16,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import static org.springframework.security.config.Customizer.withDefaults; // Import statique nécessaire
 
 @Configuration
 @EnableWebSecurity
@@ -32,15 +33,12 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                // CORRECTION : Désactivation de la protection CSRF, nécessaire pour les API REST.
+                // CORRECTION 1 : Intègre la configuration CORS (de WebConfig.java) à la chaîne de sécurité.
+                .cors(withDefaults())
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(authorize -> authorize
-                // CORRECTION : Autorise les requêtes OPTIONS (preflight) pour toutes les routes.
-                // Ceci est essentiel pour que CORS fonctionne avec Spring Security.
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                // Autorise l'accès public à toutes les routes d'authentification.
                 .requestMatchers("/api/v1/auth/**").permitAll()
-                // Toutes les autres requêtes nécessitent une authentification.
                 .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session
