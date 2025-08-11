@@ -3,6 +3,7 @@ package org.dobi.app.config;
 import org.dobi.app.security.JwtAuthFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod; // Import nécessaire
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -34,6 +35,9 @@ public class SecurityConfig {
                 // CORRECTION : Désactivation de la protection CSRF, nécessaire pour les API REST.
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(authorize -> authorize
+                // CORRECTION : Autorise les requêtes OPTIONS (preflight) pour toutes les routes.
+                // Ceci est essentiel pour que CORS fonctionne avec Spring Security.
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 // Autorise l'accès public à toutes les routes d'authentification.
                 .requestMatchers("/api/v1/auth/**").permitAll()
                 // Toutes les autres requêtes nécessitent une authentification.
