@@ -39,14 +39,11 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                // CORRECTION : Applique la configuration CORS définie dans le bean ci-dessous.
-                // C'est la première chose que la chaîne de sécurité va vérifier.
+                // CORRECTION : Active explicitement la configuration CORS définie dans le bean ci-dessous.
                 .cors(withDefaults())
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(authorize -> authorize
-                // Les routes d'authentification sont publiques
                 .requestMatchers("/api/v1/auth/**").permitAll()
-                // Toutes les autres requêtes nécessitent une authentification
                 .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session
@@ -58,23 +55,15 @@ public class SecurityConfig {
         return http.build();
     }
 
-    /**
-     * Bean qui définit les règles CORS de manière explicite pour l'application.
-     */
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        // Autorise les requêtes depuis votre frontend
         configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000", "https://localhost:3000"));
-        // Autorise les méthodes HTTP nécessaires
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        // Autorise tous les en-têtes
         configuration.setAllowedHeaders(List.of("*"));
-        // Autorise l'envoi d'informations d'identification
         configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        // Applique cette configuration à toutes les routes
         source.registerCorsConfiguration("/**", configuration);
 
         return source;
