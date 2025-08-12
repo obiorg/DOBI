@@ -3,7 +3,6 @@ package org.dobi.app.config;
 import org.dobi.app.security.JwtAuthFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -38,9 +37,17 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            // CORRECTION : Applique la configuration CORS définie dans le bean ci-dessous.
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(csrf -> csrf.disable())
+            
+            // --- DÉSACTIVATION TEMPORAIRE DE LA SÉCURITÉ ---
+            // La ligne suivante autorise toutes les requêtes.
+            .authorizeHttpRequests(authorize -> authorize.anyRequest().permitAll());
+
+            /*
+            // --- CONFIGURATION DE SÉCURITÉ ORIGINALE ---
+            // Pour réactiver la sécurité, commentez la ligne ci-dessus
+            // et décommentez ce bloc.
             .authorizeHttpRequests(authorize -> authorize
                 .requestMatchers("/api/v1/auth/**").permitAll()
                 .anyRequest().authenticated()
@@ -50,29 +57,21 @@ public class SecurityConfig {
             )
             .authenticationProvider(authenticationProvider())
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+            */
 
         return http.build();
     }
 
-    /**
-     * NOUVEAU BEAN : Définit les règles CORS de manière explicite pour l'application.
-     * C'est une méthode plus robuste pour s'assurer que Spring Security applique les bonnes règles.
-     */
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        // Autorise les requêtes depuis votre frontend (HTTP et HTTPS)
         configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000", "https://localhost:3000"));
-        // Autorise les méthodes HTTP courantes
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        // Autorise tous les en-têtes
         configuration.setAllowedHeaders(List.of("*"));
-        // Autorise l'envoi d'informations d'identification (cookies, tokens)
         configuration.setAllowCredentials(true);
         
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        // Applique cette configuration à toutes les routes de votre API
-        source.registerCorsConfiguration("/api/**", configuration);
+        source.registerCorsConfiguration("/**", configuration); // Applique à toutes les routes
         
         return source;
     }
