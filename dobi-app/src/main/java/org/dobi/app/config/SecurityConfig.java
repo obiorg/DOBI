@@ -9,6 +9,7 @@ import org.springframework.security.authentication.dao.DaoAuthenticationProvider
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -38,30 +39,47 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
+                // CORRECTION : Applique la configuration CORS définie dans le bean ci-dessous.
+                // C'est la première chose que la chaîne de sécurité va vérifier.
                 .cors(withDefaults())
                 .csrf(csrf -> csrf.disable())
-                // --- SÉCURITÉ DÉSACTIVÉE ---
-                // La ligne suivante autorise toutes les requêtes, sans authentification.
-                .authorizeHttpRequests(authorize -> authorize.anyRequest().permitAll());
+                .authorizeHttpRequests(authorize -> authorize
+                // Les routes d'authentification sont publiques
+                .requestMatchers("/api/v1/auth/**").permitAll()
+                // Toutes les autres requêtes nécessitent une authentification
+                .anyRequest().authenticated()
+                )
+                .sessionManagement(session -> session
+                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                )
+                .authenticationProvider(authenticationProvider())
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
 
+    /**
+     * Bean qui définit les règles CORS de manière explicite pour l'application.
+     */
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
+        // Autorise les requêtes depuis votre frontend
         configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000", "https://localhost:3000"));
+        // Autorise les méthodes HTTP nécessaires
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        // Autorise tous les en-têtes
         configuration.setAllowedHeaders(List.of("*"));
+        // Autorise l'envoi d'informations d'identification
         configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        // Applique cette configuration à toutes les routes
         source.registerCorsConfiguration("/**", configuration);
 
         return source;
     }
 
-    // Le reste des beans n'est pas utilisé quand la sécurité est désactivée, mais on les laisse pour un retour facile.
     @Bean
     public AuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
