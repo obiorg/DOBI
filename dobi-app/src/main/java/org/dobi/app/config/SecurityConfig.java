@@ -39,8 +39,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                // CORRECTION : Active explicitement la configuration CORS définie dans le bean ci-dessous.
-                .cors(withDefaults())
+                .cors(withDefaults()) // Applique la configuration CORS définie ci-dessous
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(authorize -> authorize
                 .requestMatchers("/api/v1/auth/**").permitAll()
