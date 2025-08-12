@@ -14,7 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UserDetails; // Import nécessaire
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/v1/auth")
-@CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true")
+// L'annotation @CrossOrigin a été supprimée pour utiliser la configuration globale.
 public class AuthController {
 
     private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
@@ -43,11 +43,7 @@ public class AuthController {
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(loginRequest.loginName(), loginRequest.password()));
         logger.info("Authentification réussie pour : {}", loginRequest.loginName());
-
-        // CORRECTION 1: Le service JWT attend un objet UserDetails, pas Authentication.
-        // On l'obtient via authentication.getPrincipal().
         String jwt = jwtService.generateToken((UserDetails) authentication.getPrincipal());
-
         return ResponseEntity.ok(new LoginResponse(jwt));
     }
 
@@ -58,16 +54,13 @@ public class AuthController {
         }
 
         String loginName = authentication.getName();
-        // Maintenant, la méthode findByLoginName existe dans le repository.
         UserAccount userAccount = userAccountRepository.findByLoginName(loginName)
-                .orElseThrow(() -> new UsernameNotFoundException("Utilisateur non trouvé pendant la validation du token : " + loginName));
+                .orElseThrow(() -> new UsernameNotFoundException("Utilisateur non trouvé : " + loginName));
 
-        // CORRECTION 2: La méthode pour obtenir le nom du rôle est getName(), pas getRoleName().
         Set<String> roles = userAccount.getRoles().stream()
                 .map(UserRole::getName)
                 .collect(Collectors.toSet());
 
-        // CORRECTION 3: Les getters (getLoginName, getEmail, etc.) existent maintenant sur UserAccount grâce à Lombok.
         UserDto userDto = new UserDto(
                 userAccount.getId(),
                 userAccount.getLoginName(),
