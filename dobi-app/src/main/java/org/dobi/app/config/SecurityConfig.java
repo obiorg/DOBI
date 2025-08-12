@@ -22,6 +22,8 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import java.util.Arrays;
 import java.util.List;
 
+import static org.springframework.security.config.Customizer.withDefaults;
+
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
@@ -37,42 +39,44 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-            .csrf(csrf -> csrf.disable())
-            
-            // --- DÉSACTIVATION TEMPORAIRE DE LA SÉCURITÉ ---
-            // La ligne suivante autorise toutes les requêtes.
-            .authorizeHttpRequests(authorize -> authorize.anyRequest().permitAll());
-
-            /*
-            // --- CONFIGURATION DE SÉCURITÉ ORIGINALE ---
-            // Pour réactiver la sécurité, commentez la ligne ci-dessus
-            // et décommentez ce bloc.
-            .authorizeHttpRequests(authorize -> authorize
+                // CORRECTION : Applique la configuration CORS définie dans le bean ci-dessous.
+                // C'est la première chose que la chaîne de sécurité va vérifier.
+                .cors(withDefaults())
+                .csrf(csrf -> csrf.disable())
+                .authorizeHttpRequests(authorize -> authorize
+                // Les routes d'authentification sont publiques
                 .requestMatchers("/api/v1/auth/**").permitAll()
+                // Toutes les autres requêtes nécessitent une authentification
                 .anyRequest().authenticated()
-            )
-            .sessionManagement(session -> session
+                )
+                .sessionManagement(session -> session
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-            )
-            .authenticationProvider(authenticationProvider())
-            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
-            */
+                )
+                .authenticationProvider(authenticationProvider())
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
 
+    /**
+     * Bean qui définit les règles CORS de manière explicite pour l'application.
+     */
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
+        // Autorise les requêtes depuis votre frontend
         configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000", "https://localhost:3000"));
+        // Autorise les méthodes HTTP nécessaires
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        // Autorise tous les en-têtes
         configuration.setAllowedHeaders(List.of("*"));
+        // Autorise l'envoi d'informations d'identification
         configuration.setAllowCredentials(true);
-        
+
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration); // Applique à toutes les routes
-        
+        // Applique cette configuration à toutes les routes
+        source.registerCorsConfiguration("/**", configuration);
+
         return source;
     }
 
